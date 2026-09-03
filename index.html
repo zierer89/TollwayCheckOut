@@ -43,7 +43,7 @@
         <div class="topbar-spacer"></div>
       </header>
 
-      <div class="detail-content">
+      <div id="placeholderContent" class="detail-content">
         <div id="bigIcon" class="big-icon">🚜</div>
         <h2 id="detailTitle">Tractor Checkout</h2>
         <div class="rule"></div>
@@ -53,6 +53,60 @@
           <span>Forms will be added here.<br>Check back later.</span>
         </div>
       </div>
+
+      <form id="truckForm" class="truck-form hidden">
+        <section class="form-section">
+          <h2>Truck Information</h2>
+          <div class="field-grid">
+            <label>Truck Number<input name="truckNumber" required /></label>
+            <label>Date<input name="date" type="date" required /></label>
+            <label>Time<input name="time" type="time" required /></label>
+            <label>Inspected By<input name="inspectedBy" required /></label>
+            <label class="wide">Location<input name="location" required /></label>
+          </div>
+        </section>
+
+        <div id="truckChecklist"></div>
+
+        <section class="form-section">
+          <h2>Truck Condition and Other Information</h2>
+          <div class="field-grid">
+            <label>Any New Damage
+              <select name="newDamage"><option value="">Select</option><option>No</option><option>Yes</option></select>
+            </label>
+            <label>Insurance Card
+              <select name="insurance"><option value="">Select</option><option>Yes</option><option>No</option></select>
+            </label>
+            <label>Fire Extinguisher / Expiration Date<input name="extinguisher" /></label>
+            <label>Safety Sticker Month No.<input name="safetySticker" /></label>
+            <label>Last Serviced<input name="lastServiced" /></label>
+            <label>Current Mileage<input name="mileage" inputmode="numeric" /></label>
+            <label>Current Engine Hours<input name="engineHours" inputmode="decimal" /></label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2>Needed Repairs / Notes</h2>
+          <textarea name="repairNotes" rows="5" placeholder="Note needed repairs here..."></textarea>
+        </section>
+
+        <section class="form-section mechanic-review">
+          <h2>Mechanic / Manager Review</h2>
+          <p class="review-note">This section is for mechanic/manager review after submission.</p>
+          <div class="field-grid">
+            <label>Mechanic's Signature<input disabled /></label>
+            <label>Date<input type="date" disabled /></label>
+            <label>Repairs Logged<select disabled><option>Yes / No</option></select></label>
+            <label>Repairs Completed<select disabled><option>Yes / No</option></select></label>
+            <label>Manager's Initials<input disabled /></label>
+          </div>
+        </section>
+
+        <div class="submit-wrap">
+          <button id="truckSubmit" class="submit-btn" type="submit">Submit Truck Checkout</button>
+          <p id="submitMessage" class="submit-message hidden">Truck checkout is complete on this device. Email/history connection will be added later.</p>
+        </div>
+      </form>
 
       <nav class="bottom-nav">
         <button id="homeBtn" type="button" class="nav-item active"><span>⌂</span><small>Home</small></button>
