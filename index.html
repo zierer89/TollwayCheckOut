@@ -4,16 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b6a3b" />
-  <meta name="description" content="Illinois Tollway vehicle and equipment checkout application" />
   <title>Illinois Tollway Equipment Checkout</title>
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=3" />
 </head>
 <body>
   <main id="app">
-    <section id="splash" class="screen splash-screen" aria-label="Illinois Tollway Equipment Checkout">
+    <section id="splash" class="screen splash-screen">
       <div class="splash-card">
-        <img src="assets/illinois-tollway-logo.jpg" alt="Illinois Tollway" class="logo" />
+        <img src="./illinois-tollway-logo.jpg?v=4" alt="Illinois Tollway" class="logo" />
         <h1>Equipment Checkout</h1>
         <p>Vehicle &amp; Equipment Inspection System</p>
         <button id="continueBtn" class="button primary" type="button">Continue</button>
@@ -24,67 +22,60 @@
       <header class="app-header">
         <div>
           <p class="eyebrow">Illinois Tollway</p>
-          <h1>Equipment Checkout</h1>
-          <p class="subtext">Select the checkout sheet you need.</p>
+          <h1>Checkout Sheets</h1>
+          <p class="subtext">Select the form you need to complete.</p>
         </div>
-        <div id="today" class="date-chip" aria-label="Today's date"></div>
+        <div id="today" class="date-chip"></div>
       </header>
 
       <section class="panel">
-        <h2>Checkout Sheets</h2>
-        <div class="equipment-grid">
-          <button class="equipment-card" data-sheet="truck" type="button">
-            <span class="icon" aria-hidden="true">🚚</span>
-            <span class="card-copy">
-              <strong>Driver's Truck</strong>
-              <small>Truck inspection sheet</small>
-            </span>
-            <span class="arrow" aria-hidden="true">›</span>
+        <div class="checkout-grid">
+          <button class="checkout-card" data-sheet="tractor" type="button">
+            <span class="icon">🚜</span>
+            <span class="card-copy"><strong>Tractor Checkout</strong><small>Open checkout sheet</small></span>
+            <span class="arrow">›</span>
           </button>
 
-          <button class="equipment-card" data-sheet="loader" type="button">
-            <span class="icon" aria-hidden="true">⚙️</span>
-            <span class="card-copy">
-              <strong>Loader</strong>
-              <small>Equipment inspection</small>
-            </span>
-            <span class="arrow" aria-hidden="true">›</span>
+          <button class="checkout-card" data-sheet="equipment" type="button">
+            <span class="icon">🛠️</span>
+            <span class="card-copy"><strong>Equipment Checkout</strong><small>Open checkout sheet</small></span>
+            <span class="arrow">›</span>
           </button>
 
-          <button class="equipment-card" data-sheet="backhoe" type="button">
-            <span class="icon" aria-hidden="true">🏗️</span>
-            <span class="card-copy">
-              <strong>Backhoe / Excavator</strong>
-              <small>Heavy equipment inspection</small>
-            </span>
-            <span class="arrow" aria-hidden="true">›</span>
+          <button class="checkout-card" data-sheet="lane-blade" type="button">
+            <span class="icon">🛣️</span>
+            <span class="card-copy"><strong>Lane Blade Inspection</strong><small>Open inspection sheet</small></span>
+            <span class="arrow">›</span>
           </button>
 
-          <button class="equipment-card" data-sheet="mower" type="button">
-            <span class="icon" aria-hidden="true">🚜</span>
-            <span class="card-copy">
-              <strong>Tractor / Mower</strong>
-              <small>Mowing equipment inspection</small>
-            </span>
-            <span class="arrow" aria-hidden="true">›</span>
+          <button class="checkout-card" data-sheet="help" type="button">
+            <span class="icon">🚙</span>
+            <span class="card-copy"><strong>HELP Checkout</strong><small>Open checkout sheet</small></span>
+            <span class="arrow">›</span>
           </button>
 
-          <button class="equipment-card" data-sheet="trailer" type="button">
-            <span class="icon" aria-hidden="true">▰</span>
-            <span class="card-copy">
-              <strong>Trailer</strong>
-              <small>Trailer inspection</small>
-            </span>
-            <span class="arrow" aria-hidden="true">›</span>
+          <button class="checkout-card" data-sheet="sweeper" type="button">
+            <span class="icon">🧹</span>
+            <span class="card-copy"><strong>Sweeper Checkout</strong><small>Open checkout sheet</small></span>
+            <span class="arrow">›</span>
           </button>
 
-          <button class="equipment-card" data-sheet="small" type="button">
-            <span class="icon" aria-hidden="true">🔧</span>
-            <span class="card-copy">
-              <strong>Small Equipment</strong>
-              <small>Tools &amp; specialty equipment</small>
-            </span>
-            <span class="arrow" aria-hidden="true">›</span>
+          <button class="checkout-card" data-sheet="truck" type="button">
+            <span class="icon">🚚</span>
+            <span class="card-copy"><strong>Truck Checkout</strong><small>Open checkout sheet</small></span>
+            <span class="arrow">›</span>
+          </button>
+
+          <button class="checkout-card" data-sheet="tma" type="button">
+            <span class="icon">🚧</span>
+            <span class="card-copy"><strong>TMA Checkout</strong><small>Open checkout sheet</small></span>
+            <span class="arrow">›</span>
+          </button>
+
+          <button class="checkout-card" data-sheet="message-board" type="button">
+            <span class="icon">📟</span>
+            <span class="card-copy"><strong>Message Board Checkout</strong><small>Open checkout sheet</small></span>
+            <span class="arrow">›</span>
           </button>
         </div>
       </section>
@@ -94,18 +85,20 @@
       <div class="sheet-toolbar">
         <button id="backBtn" class="button secondary" type="button">← Checkout Sheets</button>
       </div>
+
       <section class="panel form-placeholder">
-        <p class="eyebrow">Checkout Sheet</p>
-        <h1 id="sheetTitle">Equipment</h1>
-        <p id="sheetDescription" class="subtext"></p>
+        <p class="eyebrow">Illinois Tollway</p>
+        <h1 id="sheetTitle">Checkout</h1>
+        <p class="subtext">Interactive checklist will be added here.</p>
+
         <div class="placeholder-box">
-          <strong>Interactive checkout form goes here.</strong>
-          <span>We will replace this area with the actual inspection sheet for this equipment.</span>
+          <strong id="placeholderTitle">Checkout sheet coming next</strong>
+          <span>We’re building the main screens first. The actual checklist for this button will be added afterward.</span>
         </div>
       </section>
     </section>
   </main>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
