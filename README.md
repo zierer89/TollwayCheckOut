@@ -74,3 +74,9 @@ v12 Main Settings Menu:
 - Tapping it opens a menu in this exact order: Settings, About.
 - Settings and About each open their own page with a Back button.
 - Existing checkout forms and v11 sticky checkout header behavior are unchanged.
+
+v13 Settings/About Headers:
+- Settings page now has a dedicated left-facing back arrow to return to the main Checkout Sheets page.
+- About page now has a dedicated left-facing back arrow to return to the main Checkout Sheets page.
+- Each page has a clear centered header label showing whether the operator is in Settings or About.
+- Existing checkout forms and app behavior remain unchanged.

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#118a45" />
   <title>Illinois Tollway Checkout</title>
-  <link rel="stylesheet" href="styles.css?v=16" />
+  <link rel="stylesheet" href="styles.css?v=17" />
 </head>
 <body>
   <main id="app">
@@ -352,11 +352,17 @@
       </form>
 
       <section id="settingsPage" class="menu-page hidden">
-        <header class="topbar"><button class="back-btn menu-back-btn" type="button">← Back</button><h1>Settings</h1></header>
+        <header class="topbar menu-page-topbar">
+          <button class="back-btn menu-back-btn" type="button" aria-label="Back to main page">←</button>
+          <h1>Settings</h1>
+        </header>
         <div class="menu-page-content"><h2>Settings</h2><p>App settings will be added here.</p></div>
       </section>
       <section id="aboutPage" class="menu-page hidden">
-        <header class="topbar"><button class="back-btn menu-back-btn" type="button">← Back</button><h1>About</h1></header>
+        <header class="topbar menu-page-topbar">
+          <button class="back-btn menu-back-btn" type="button" aria-label="Back to main page">←</button>
+          <h1>About</h1>
+        </header>
         <div class="menu-page-content"><h2>About</h2><p>Illinois Tollway Equipment Checkout App</p></div>
       </section>
 
@@ -367,6 +373,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=16"></script>
+  <script src="app.js?v=17"></script>
 </body>
 </html>
