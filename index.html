@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#118a45" />
   <title>Illinois Tollway Checkout</title>
-  <link rel="stylesheet" href="styles.css?v=17" />
+  <link rel="stylesheet" href="styles.css?v=19" />
 </head>
 <body>
   <main id="app">
@@ -49,6 +49,13 @@
         <h1 id="sheetTitle">Tractor Checkout</h1>
         <div class="topbar-spacer"></div>
       </header>
+
+      <div id="utilityPageContent" class="utility-page-content hidden">
+        <div class="utility-card">
+          <h2 id="utilityPageHeading">Settings</h2>
+          <p id="utilityPageText">App settings will be added here.</p>
+        </div>
+      </div>
 
       <div id="placeholderContent" class="detail-content">
         <div id="bigIcon" class="big-icon">🚜</div>
@@ -350,29 +357,13 @@
           <p id="sweeperSubmitMessage" class="submit-message hidden">Sweeper checkout is complete on this device. Review routing and history will be connected later.</p>
         </div>
       </form>
-
-      <section id="settingsPage" class="menu-page hidden">
-        <header class="topbar menu-page-topbar">
-          <button class="back-btn menu-back-btn" type="button" aria-label="Back to main page">←</button>
-          <h1>Settings</h1>
-        </header>
-        <div class="menu-page-content"><h2>Settings</h2><p>App settings will be added here.</p></div>
-      </section>
-      <section id="aboutPage" class="menu-page hidden">
-        <header class="topbar menu-page-topbar">
-          <button class="back-btn menu-back-btn" type="button" aria-label="Back to main page">←</button>
-          <h1>About</h1>
-        </header>
-        <div class="menu-page-content"><h2>About</h2><p>Illinois Tollway Equipment Checkout App</p></div>
-      </section>
-
-      <nav class="bottom-nav">
+<nav class="bottom-nav">
         <button id="homeBtn" type="button" class="nav-item active"><span>⌂</span><small>Home</small></button>
         <button type="button" class="nav-item" disabled><span>◷</span><small>History</small></button>
       </nav>
     </section>
-  </main>
+</main>
 
-  <script src="app.js?v=17"></script>
+  <script src="app.js?v=19"></script>
 </body>
 </html>

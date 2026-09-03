@@ -80,3 +80,16 @@ v13 Settings/About Headers:
 - About page now has a dedicated left-facing back arrow to return to the main Checkout Sheets page.
 - Each page has a clear centered header label showing whether the operator is in Settings or About.
 - Existing checkout forms and app behavior remain unchanged.
+
+v14 Settings/About Fix:
+- Fixed Settings and About pages so they are true top-level app screens instead of being nested inside the hidden checkout-sheet screen.
+- Both pages now visibly show a left back arrow and centered page title.
+- Back arrow returns directly to the main Checkout Sheets page.
+- Existing checkout forms and sticky checkout header remain unchanged.
+
+v15 Settings/About Navigation Fix:
+- Removed the separate Settings/About screen implementation that could produce a blank white page.
+- Settings and About now reuse the same proven sticky detail header used by checkout sheets.
+- Each page shows a left back arrow and its page label at the top.
+- The back arrow returns directly to the main Checkout Sheets page.
+- Existing checkout forms remain unchanged.

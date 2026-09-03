@@ -5,6 +5,10 @@
   const backBtn = document.getElementById("backBtn");
   const homeBtn = document.getElementById("homeBtn");
   const sheetTitle = document.getElementById("sheetTitle");
+  const utilityPageContent = document.getElementById("utilityPageContent");
+  const utilityPageHeading = document.getElementById("utilityPageHeading");
+  const utilityPageText = document.getElementById("utilityPageText");
+  const bottomNav = document.querySelector(".bottom-nav");
   const detailTitle = document.getElementById("detailTitle");
   const bigIcon = document.getElementById("bigIcon");
   const placeholderContent = document.getElementById("placeholderContent");
@@ -303,6 +307,9 @@
     splash.classList.add("hidden");
     sheet.classList.add("hidden");
     home.classList.remove("hidden");
+    utilityPageContent.classList.add("hidden");
+    placeholderContent.classList.remove("hidden");
+    bottomNav.classList.remove("hidden");
     window.scrollTo(0,0);
   }
 
@@ -317,6 +324,8 @@
     splash.classList.add("hidden");
     home.classList.add("hidden");
     sheet.classList.remove("hidden");
+    utilityPageContent.classList.add("hidden");
+    bottomNav.classList.remove("hidden");
 
     truckForm.classList.add("hidden");
     tractorForm.classList.add("hidden");
@@ -489,8 +498,6 @@
 
   const mainSettingsButton = document.getElementById("mainSettingsButton");
   const mainSettingsDropdown = document.getElementById("mainSettingsDropdown");
-  const settingsPage = document.getElementById("settingsPage");
-  const aboutPage = document.getElementById("aboutPage");
 
   function closeMainSettingsMenu(){
     mainSettingsDropdown.classList.add("hidden");
@@ -508,25 +515,38 @@
     if(!e.target.closest(".main-settings-menu")) closeMainSettingsMenu();
   });
 
-  document.querySelectorAll("[data-menu-page]").forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      closeMainSettingsMenu();
-      home.classList.add("hidden");
-      sheet.classList.add("hidden");
-      settingsPage.classList.add("hidden");
-      aboutPage.classList.add("hidden");
-      (btn.dataset.menuPage==="settings" ? settingsPage : aboutPage).classList.remove("hidden");
-      window.scrollTo(0,0);
-    });
-  });
+  function showUtilityPage(page){
+    closeMainSettingsMenu();
 
-  document.querySelectorAll(".menu-back-btn").forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      settingsPage.classList.add("hidden");
-      aboutPage.classList.add("hidden");
-      home.classList.remove("hidden");
-      window.scrollTo(0,0);
-    });
+    splash.classList.add("hidden");
+    home.classList.add("hidden");
+    sheet.classList.remove("hidden");
+
+    truckForm.classList.add("hidden");
+    tractorForm.classList.add("hidden");
+    tmaForm.classList.add("hidden");
+    equipmentForm.classList.add("hidden");
+    sweeperForm.classList.add("hidden");
+    placeholderContent.classList.add("hidden");
+
+    utilityPageContent.classList.remove("hidden");
+    bottomNav.classList.add("hidden");
+
+    if(page === "settings"){
+      sheetTitle.textContent = "Settings";
+      utilityPageHeading.textContent = "Settings";
+      utilityPageText.textContent = "App settings will be added here.";
+    } else {
+      sheetTitle.textContent = "About";
+      utilityPageHeading.textContent = "About";
+      utilityPageText.textContent = "Illinois Tollway Equipment Checkout App";
+    }
+
+    window.scrollTo({top:0,left:0,behavior:"auto"});
+  }
+
+  document.querySelectorAll("[data-menu-page]").forEach(btn=>{
+    btn.addEventListener("click",()=>showUtilityPage(btn.dataset.menuPage));
   });
 
   buildChecklist();
