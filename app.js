@@ -28,6 +28,11 @@
   const equipmentSubmitMessage = document.getElementById("equipmentSubmitMessage");
   const equipmentPhotos = document.getElementById("equipmentPhotos");
   const equipmentPhotoList = document.getElementById("equipmentPhotoList");
+  const sweeperForm = document.getElementById("sweeperForm");
+  const sweeperChecklist = document.getElementById("sweeperChecklist");
+  const sweeperSubmitMessage = document.getElementById("sweeperSubmitMessage");
+  const sweeperPhotos = document.getElementById("sweeperPhotos");
+  const sweeperPhotoList = document.getElementById("sweeperPhotoList");
 
   const sheets = {
     tractor:["Tractor Checkout","🚜"],
@@ -96,6 +101,30 @@
     ]]
   ];
 
+
+  const sweeperItems = [
+    ["TRUCK ENGINE COMPARTMENT",[
+      "Engine oil level","Coolant level, add only 50/50 mixture","Transmission fluid level",
+      "Power steering fluid level","Serpentine belt","Check for leaks","Air cleaner"
+    ]],
+    ["REAR ENGINE M4's 770",[
+      "Oil level","Coolant level","Serpentine belt","Check for leaks","Air cleaner","Sweeper console controls"
+    ]],
+    ["CAB INTERIOR",[
+      "Oil pressure and fuel gauge","Air pressure","Light controls - head, stop, turn, 4-way and clearance",
+      "Horn, windshield wipers and washers","Mirrors","Radio operation","Brake pedal travel",
+      "Parking brake","Seat belts","First aid kit","Fire extinguisher","Flares","Backup camera"
+    ]],
+    ["TRUCK EXTERIOR",[
+      "Illumination of all lights, head, clearance, tail, brake, 4-way, beacon, alternating, and arrowboard lights",
+      "Clean light lenses and reflectors","Tires, wheels for loose lugs and flat tires","Fuel tank cap","Drain air tanks"
+    ]],
+    ["SWEEPING UNIT",[
+      "Hydraulic oil level and cap","Hydraulic leaks","Gutter brooms","Water system operation",
+      "Main broom operation and condition","Hopper and dump door operation","Automatic grease reservoir",
+      "Elevator condition","Sweeper console controls","Outriggers (Stewart Amos)"
+    ]]
+  ];
 
   const equipmentItems = [
     ["FLUID LEVELS",["Engine Oil/All Engines","Transmission Oil","Hydraulic Oil","Coolant Level/All Engines","Brake Fluid"]],
@@ -293,6 +322,7 @@
     tractorForm.classList.add("hidden");
     tmaForm.classList.add("hidden");
     equipmentForm.classList.add("hidden");
+    sweeperForm.classList.add("hidden");
     placeholderContent.classList.add("hidden");
 
     const now = new Date();
@@ -323,6 +353,13 @@
       equipmentSubmitMessage.classList.add("hidden");
       const date = equipmentForm.querySelector('[name="equipmentDate"]');
       const time = equipmentForm.querySelector('[name="equipmentTime"]');
+      if(!date.value) date.value = dateValue;
+      if(!time.value) time.value = timeValue;
+    } else if(key === "sweeper"){
+      sweeperForm.classList.remove("hidden");
+      sweeperSubmitMessage.classList.add("hidden");
+      const date = sweeperForm.querySelector('[name="sweeperDate"]');
+      const time = sweeperForm.querySelector('[name="sweeperTime"]');
       if(!date.value) date.value = dateValue;
       if(!time.value) time.value = timeValue;
     } else {
@@ -377,6 +414,25 @@
     tractorSubmitMessage.classList.remove("hidden");
     tractorSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
   });
+
+  sweeperForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const rows=[...sweeperChecklist.querySelectorAll(".check-row")];
+    const missing=rows.filter(row=>!row.dataset.status);
+    const missingDefectNotes=rows.filter(row=>row.dataset.status==="DEFECT" && !row.querySelector(".defect-note").value.trim());
+    if(missing.length){
+      alert(`Please mark every inspection item OK, DEFECT, or N/A. ${missing.length} item(s) are still unanswered.`);
+      missing[0].scrollIntoView({behavior:"smooth",block:"center"}); return;
+    }
+    if(missingDefectNotes.length){
+      alert("Please add a comment for every item marked DEFECT.");
+      missingDefectNotes[0].querySelector(".defect-note").focus(); return;
+    }
+    if(!sweeperForm.reportValidity()) return;
+    sweeperSubmitMessage.classList.remove("hidden");
+    sweeperSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
+  });
+  sweeperPhotos.addEventListener("change",()=>showPhotoNames(sweeperPhotos,sweeperPhotoList));
 
   equipmentForm.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -434,5 +490,6 @@
   makeChecklist(tractorChecklist, tractorItems);
   makeChecklist(tmaChecklist, tmaItems);
   makeChecklist(equipmentChecklist, equipmentItems);
+  makeChecklist(sweeperChecklist, sweeperItems);
   setTimeout(showHome,5000);
 })();

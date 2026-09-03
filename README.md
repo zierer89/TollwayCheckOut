@@ -48,3 +48,17 @@ v9 Equipment Checkout added:
 - Repair notes and optional Photo Log
 - Mechanic Review excluded for later approval workflow
 - Locked Truck, Tractor and TMA forms unchanged
+
+v10 Sweeper Checkout:
+- Added Street Sweeper Inspection Sheet under Sweeper Checkout.
+- All checklist items require OK / DEFECT / N/A before submission.
+- DEFECT requires written explanation.
+- Air Cleaner is a normal checklist item for both truck and rear engine.
+- Separate required numeric restriction-gauge reading fields for both air cleaners.
+- Wash Unit After Using is a required Yes / No selection.
+- Truck Condition includes Exterior Clean, Interior Clean, Damage Yes/No.
+- Safety Sticker uses Month 1-12 and Year 26-60.
+- Last Serviced (Hours), Current Hours and Current Mileage are numeric.
+- Includes repair notes and optional Photo Log.
+- Mechanic Review excluded for future approval workflow.
+- Locked v9 forms unchanged.
