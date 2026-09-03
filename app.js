@@ -23,6 +23,11 @@
   const tmaSubmitMessage = document.getElementById("tmaSubmitMessage");
   const tmaPhotos = document.getElementById("tmaPhotos");
   const tmaPhotoList = document.getElementById("tmaPhotoList");
+  const equipmentForm = document.getElementById("equipmentForm");
+  const equipmentChecklist = document.getElementById("equipmentChecklist");
+  const equipmentSubmitMessage = document.getElementById("equipmentSubmitMessage");
+  const equipmentPhotos = document.getElementById("equipmentPhotos");
+  const equipmentPhotoList = document.getElementById("equipmentPhotoList");
 
   const sheets = {
     tractor:["Tractor Checkout","🚜"],
@@ -91,6 +96,13 @@
     ]]
   ];
 
+
+  const equipmentItems = [
+    ["FLUID LEVELS",["Engine Oil/All Engines","Transmission Oil","Hydraulic Oil","Coolant Level/All Engines","Brake Fluid"]],
+    ["GREASING",["Automatic Greaser","Fittings Not Cover by Automatic Greaser"]],
+    ["VISUAL INSPECTION",["Air Filter Service Indicator","Air Cleaner Connections all Engines","Belt Tension all Engines","Wheel Lugs & Tires","Any signs of Leaks","Undercarriage","Track Adjustment & Master Pin","Is Unit Clean","Seat Belts"]],
+    ["START ENGINE AND CHECK",["Gauges & Warning Lights","Horn","Brakes","Lights","Steering & Loader Functions","Back Up Alarm","Mower Operation","Clutch Operation","Charging System (Volt Meter)","Backup Camera"]]
+  ];
 
   const tmaItems = [
     ["FRAME, SUPPORT ASSY., AND CARTRIDGE ASSEMBLIES",[
@@ -280,6 +292,7 @@
     truckForm.classList.add("hidden");
     tractorForm.classList.add("hidden");
     tmaForm.classList.add("hidden");
+    equipmentForm.classList.add("hidden");
     placeholderContent.classList.add("hidden");
 
     const now = new Date();
@@ -305,6 +318,13 @@
       tmaSubmitMessage.classList.add("hidden");
       const date = tmaForm.querySelector('[name="tmaDate"]');
       if(!date.value) date.value = dateValue;
+    } else if(key === "equipment"){
+      equipmentForm.classList.remove("hidden");
+      equipmentSubmitMessage.classList.add("hidden");
+      const date = equipmentForm.querySelector('[name="equipmentDate"]');
+      const time = equipmentForm.querySelector('[name="equipmentTime"]');
+      if(!date.value) date.value = dateValue;
+      if(!time.value) time.value = timeValue;
     } else {
       placeholderContent.classList.remove("hidden");
     }
@@ -358,6 +378,25 @@
     tractorSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
   });
 
+  equipmentForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const rows=[...equipmentChecklist.querySelectorAll(".check-row")];
+    const missing=rows.filter(row=>!row.dataset.status);
+    const missingDefectNotes=rows.filter(row=>row.dataset.status==="DEFECT" && !row.querySelector(".defect-note").value.trim());
+    if(missing.length){
+      alert(`Please mark every inspection item OK, DEFECT, or N/A. ${missing.length} item(s) are still unanswered.`);
+      missing[0].scrollIntoView({behavior:"smooth",block:"center"}); return;
+    }
+    if(missingDefectNotes.length){
+      alert("Please add a comment for every item marked DEFECT.");
+      missingDefectNotes[0].querySelector(".defect-note").focus(); return;
+    }
+    if(!equipmentForm.reportValidity()) return;
+    equipmentSubmitMessage.classList.remove("hidden");
+    equipmentSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
+  });
+  equipmentPhotos.addEventListener("change",()=>showPhotoNames(equipmentPhotos,equipmentPhotoList));
+
   tmaForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const rows = [...tmaChecklist.querySelectorAll(".check-row")];
@@ -394,5 +433,6 @@
   buildChecklist();
   makeChecklist(tractorChecklist, tractorItems);
   makeChecklist(tmaChecklist, tmaItems);
+  makeChecklist(equipmentChecklist, equipmentItems);
   setTimeout(showHome,5000);
 })();

@@ -37,3 +37,14 @@ v8 TMA Checkout:
 - Added Needed Repairs / Notes and optional Photo Log.
 - Manager/Mechanic Review is intentionally excluded from the operator form for future approval workflow.
 - All previously approved Truck and Tractor behavior remains unchanged.
+
+v9 Equipment Checkout added:
+- Machine, Model, Date, Time, Inspected By, Location
+- Hourmeter and Service Due are numeric fields together in the header
+- Service Due removed from the checklist
+- Fluid Levels, Greasing, Visual Inspection, Start Engine and Check
+- Every line requires OK / DEFECT / N/A
+- DEFECT requires written explanation
+- Repair notes and optional Photo Log
+- Mechanic Review excluded for later approval workflow
+- Locked Truck, Tractor and TMA forms unchanged

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#118a45" />
   <title>Illinois Tollway Checkout</title>
-  <link rel="stylesheet" href="styles.css?v=12" />
+  <link rel="stylesheet" href="styles.css?v=13" />
 </head>
 <body>
   <main id="app">
@@ -250,6 +250,35 @@
         </div>
       </form>
 
+      <form id="equipmentForm" class="truck-form hidden">
+        <section class="form-section">
+          <h2>Equipment Information</h2>
+          <div class="field-grid">
+            <label>Machine<input name="equipmentMachine" required /></label>
+            <label>Model<input name="equipmentModel" required /></label>
+            <label>Date<input name="equipmentDate" type="date" required /></label>
+            <label>Time<input name="equipmentTime" type="time" required /></label>
+            <label>Inspected By<input name="equipmentInspectedBy" required /></label>
+            <label>Location<select name="equipmentLocation" required>
+              <option value="">Select Location</option><option>M1</option><option>M2</option><option>M3</option><option>M4</option><option>M5</option><option>M6</option><option>M7</option><option>M8</option><option>M11</option><option>M12</option><option>M14</option><option>M16</option><option>CAG</option><option>E02</option><option>E06</option><option>Sign Shop</option><option>Road Electric</option>
+            </select></label>
+            <label>Hourmeter<input name="equipmentHourmeter" type="number" inputmode="decimal" min="0" step="0.1" placeholder="Enter hourmeter reading" required /></label>
+            <label>Service Due<input name="equipmentServiceDue" type="number" inputmode="decimal" min="0" step="0.1" placeholder="Enter service due reading" required /></label>
+          </div>
+        </section>
+        <div id="equipmentChecklist"></div>
+        <section class="form-section"><h2>Needed Repairs / Notes</h2><textarea name="equipmentRepairNotes" rows="5" placeholder="If repairs are needed, explain them here..."></textarea></section>
+        <section class="form-section photo-section">
+          <h2>Photo Log <span class="optional">(Optional)</span></h2>
+          <p class="photo-help">Add photos of damage, defects, leaks, worn parts, or anything else that should be documented.</p>
+          <label class="photo-upload"><span class="photo-symbol">📷</span><span>Add Photos</span><input id="equipmentPhotos" type="file" accept="image/*" multiple /></label>
+          <div id="equipmentPhotoList" class="photo-list"></div>
+        </section>
+        <div class="submit-wrap"><button class="submit-btn" type="submit">Submit Equipment Checkout</button>
+          <p id="equipmentSubmitMessage" class="submit-message hidden">Equipment checkout is complete on this device. Review routing and history will be connected later.</p>
+        </div>
+      </form>
+
       <nav class="bottom-nav">
         <button id="homeBtn" type="button" class="nav-item active"><span>⌂</span><small>Home</small></button>
         <button type="button" class="nav-item" disabled><span>◷</span><small>History</small></button>
@@ -257,6 +286,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>
