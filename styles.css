@@ -194,3 +194,21 @@ textarea{min-height:120px;resize:vertical}
   .status-group{justify-content:flex-start}
   .status-btn{flex:1}
 }
+
+/* Tractor form refinements and photo logs */
+.check-row{grid-template-columns:minmax(0,1fr) 230px}
+.check-text{min-width:0;overflow-wrap:anywhere;padding-right:8px}
+.status-group{width:230px;flex-wrap:nowrap}
+.status-btn{min-width:0;flex:1 1 0}
+.photo-section .optional{color:#6b6b6b;font-size:.85rem;font-weight:600}
+.photo-help{color:#666;margin:-6px 0 14px;line-height:1.4}
+.photo-upload{min-height:110px;border:2px dashed #b8c3bc;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;background:#fafcfb;font-weight:800;color:#0d7439}
+.photo-upload input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.photo-symbol{font-size:2rem}
+.photo-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:12px}
+.photo-chip{border:1px solid #dfe5e1;border-radius:10px;padding:10px;font-size:.85rem;background:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:680px){
+  .check-row{grid-template-columns:1fr}
+  .status-group{width:100%;justify-content:stretch}
+  .status-btn{min-height:44px}
+}
