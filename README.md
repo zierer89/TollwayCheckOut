@@ -68,3 +68,9 @@ v11 Sticky Checkout Header:
 - The checkout detail header now stays visible as the operator scrolls down any form.
 - The Back button and current checkout-sheet title follow the operator through the form.
 - This applies to all checkout sheets without changing their locked content or validation.
+
+v12 Main Settings Menu:
+- Added a gear/settings icon at the top right of the main Checkout Sheets page.
+- Tapping it opens a menu in this exact order: Settings, About.
+- Settings and About each open their own page with a Back button.
+- Existing checkout forms and v11 sticky checkout header behavior are unchanged.

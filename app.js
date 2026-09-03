@@ -486,6 +486,49 @@
   backBtn.addEventListener("click",showHome);
   homeBtn.addEventListener("click",showHome);
 
+
+  const mainSettingsButton = document.getElementById("mainSettingsButton");
+  const mainSettingsDropdown = document.getElementById("mainSettingsDropdown");
+  const settingsPage = document.getElementById("settingsPage");
+  const aboutPage = document.getElementById("aboutPage");
+
+  function closeMainSettingsMenu(){
+    mainSettingsDropdown.classList.add("hidden");
+    mainSettingsButton.setAttribute("aria-expanded","false");
+  }
+
+  mainSettingsButton.addEventListener("click",(e)=>{
+    e.stopPropagation();
+    const opening=mainSettingsDropdown.classList.contains("hidden");
+    mainSettingsDropdown.classList.toggle("hidden");
+    mainSettingsButton.setAttribute("aria-expanded", opening ? "true" : "false");
+  });
+
+  document.addEventListener("click",(e)=>{
+    if(!e.target.closest(".main-settings-menu")) closeMainSettingsMenu();
+  });
+
+  document.querySelectorAll("[data-menu-page]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      closeMainSettingsMenu();
+      home.classList.add("hidden");
+      sheet.classList.add("hidden");
+      settingsPage.classList.add("hidden");
+      aboutPage.classList.add("hidden");
+      (btn.dataset.menuPage==="settings" ? settingsPage : aboutPage).classList.remove("hidden");
+      window.scrollTo(0,0);
+    });
+  });
+
+  document.querySelectorAll(".menu-back-btn").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      settingsPage.classList.add("hidden");
+      aboutPage.classList.add("hidden");
+      home.classList.remove("hidden");
+      window.scrollTo(0,0);
+    });
+  });
+
   buildChecklist();
   makeChecklist(tractorChecklist, tractorItems);
   makeChecklist(tmaChecklist, tmaItems);

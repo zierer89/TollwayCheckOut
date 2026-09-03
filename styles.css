@@ -240,3 +240,69 @@ textarea{min-height:120px;resize:vertical}
 #sheet .topbar{
   box-shadow: 0 2px 8px rgba(0,0,0,.12);
 }
+
+
+/* v12 main-page settings menu */
+#home .topbar{ position:relative; }
+.main-settings-menu{
+  position:absolute;
+  right:16px;
+  top:50%;
+  transform:translateY(-50%);
+}
+.settings-icon-btn{
+  width:44px;
+  height:44px;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:inherit;
+  font-size:27px;
+  line-height:1;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.settings-icon-btn:active{ background:rgba(255,255,255,.15); }
+.settings-dropdown{
+  position:absolute;
+  right:0;
+  top:50px;
+  min-width:180px;
+  background:#fff;
+  border-radius:10px;
+  box-shadow:0 5px 18px rgba(0,0,0,.22);
+  overflow:hidden;
+  z-index:2000;
+}
+.settings-dropdown button{
+  display:block;
+  width:100%;
+  padding:15px 18px;
+  border:0;
+  border-bottom:1px solid #e5e5e5;
+  background:#fff;
+  color:#222;
+  text-align:left;
+  font:inherit;
+  cursor:pointer;
+}
+.settings-dropdown button:last-child{border-bottom:0;}
+.settings-dropdown button:active{background:#f2f2f2;}
+.menu-page{
+  min-height:100vh;
+  background:#f5f6f7;
+}
+.menu-page .topbar{
+  position:sticky;
+  top:0;
+  z-index:1000;
+  box-shadow:0 2px 8px rgba(0,0,0,.12);
+}
+.menu-page-content{
+  margin:18px;
+  padding:20px;
+  background:#fff;
+  border-radius:12px;
+}
