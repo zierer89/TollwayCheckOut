@@ -18,3 +18,11 @@ Included:
 The existing Truck Checkout also now includes an optional Photo Log.
 
 Mechanic/manager approval can be added later as a separate final approval stage.
+
+
+v7 Truck Checkout changes:
+- Removed Mechanic / Manager Review from the driver's Truck Checkout.
+- Safety Sticker Month No. now uses two dropdowns:
+  - Month: 1 through 12
+  - Year: 26 through 60
+- Tractor Checkout remains unchanged.

@@ -212,3 +212,18 @@ textarea{min-height:120px;resize:vertical}
   .status-group{width:100%;justify-content:stretch}
   .status-btn{min-height:44px}
 }
+
+/* Truck safety sticker month/year selector */
+.safety-sticker-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:6px;
+}
+.safety-sticker-grid select{
+  width:100%;
+  min-width:0;
+}
+@media(max-width:420px){
+  .safety-sticker-grid{grid-template-columns:1fr 1fr}
+}
