@@ -1,15 +1,7 @@
-Illinois Tollway Checkout UI v3
+Illinois Tollway Checkout UI v4
 
-Truck Checkout is now active and contains:
-- Truck number, date, time, inspector and location
-- Full interactive truck inspection checklist
-- OK / DEFECT / N/A controls
-- Defect comments required when DEFECT is selected
-- Truck condition / mileage / engine hour fields
-- Repair notes
-- Read-only mechanic/manager review section
-- Submit validation
+Truck Checkout now includes a Location dropdown in this exact order:
+M1, M2, M3, M4, M5, M6, M7, M8, M11, M12, M14, M16, CAG, E02, E06, Sign Shop, RE.
 
-Submit currently validates the form on-device. Emailing and inspection history will be connected later.
-
+Everything else from v3 remains in place.
 All files are in one folder for GitHub upload.
