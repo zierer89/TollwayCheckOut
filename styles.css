@@ -227,3 +227,16 @@ textarea{min-height:120px;resize:vertical}
 @media(max-width:420px){
   .safety-sticker-grid{grid-template-columns:1fr 1fr}
 }
+
+
+/* v11: Keep checkout back button + current checkout title visible while scrolling */
+#sheet .topbar{
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Prevent sticky header from visually blending into form content */
+#sheet .topbar{
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+}

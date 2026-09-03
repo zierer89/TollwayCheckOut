@@ -62,3 +62,9 @@ v10 Sweeper Checkout:
 - Includes repair notes and optional Photo Log.
 - Mechanic Review excluded for future approval workflow.
 - Locked v9 forms unchanged.
+
+
+v11 Sticky Checkout Header:
+- The checkout detail header now stays visible as the operator scrolls down any form.
+- The Back button and current checkout-sheet title follow the operator through the form.
+- This applies to all checkout sheets without changing their locked content or validation.
