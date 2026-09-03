@@ -1,0 +1,9 @@
+{
+  "name": "Illinois Tollway Equipment Checkout",
+  "short_name": "Tollway Checkout",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f5",
+  "theme_color": "#0b6a3b",
+  "icons": []
+}
