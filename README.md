@@ -93,3 +93,7 @@ v15 Settings/About Navigation Fix:
 - Each page shows a left back arrow and its page label at the top.
 - The back arrow returns directly to the main Checkout Sheets page.
 - Existing checkout forms remain unchanged.
+
+v16 About Credit:
+- Added “Mobile app created by Ryan Zierer 2026” to the About section.
+- All approved v15 behavior remains unchanged.

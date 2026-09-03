@@ -539,7 +539,7 @@
     } else {
       sheetTitle.textContent = "About";
       utilityPageHeading.textContent = "About";
-      utilityPageText.textContent = "Illinois Tollway Equipment Checkout App";
+      utilityPageText.innerHTML = "Illinois Tollway Equipment Checkout App<br><br>Mobile app created by Ryan Zierer 2026";
     }
 
     window.scrollTo({top:0,left:0,behavior:"auto"});
