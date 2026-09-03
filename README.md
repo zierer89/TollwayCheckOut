@@ -1,12 +1,10 @@
-# Illinois Tollway Equipment Checkout
+Illinois Tollway Checkout UI
 
-All website files are now in ONE folder for easier GitHub upload.
-
-Upload these files together to the root of your GitHub repository:
-- index.html
-- styles.css
-- app.js
-- illinois-tollway-logo.jpg
-- README.md
-
-There is no separate assets folder in this version.
+Updated to match the approved mockup:
+- New Illinois Tollway logo
+- White 5-second splash screen
+- Green Checkout Sheets header
+- Eight green checkout buttons
+- Placeholder detail screen for each sheet
+- Home / History bottom navigation
+- All files remain in one folder for easy GitHub upload
