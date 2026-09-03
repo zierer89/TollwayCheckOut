@@ -18,6 +18,11 @@
   const truckPhotoList = document.getElementById("truckPhotoList");
   const tractorPhotos = document.getElementById("tractorPhotos");
   const tractorPhotoList = document.getElementById("tractorPhotoList");
+  const tmaForm = document.getElementById("tmaForm");
+  const tmaChecklist = document.getElementById("tmaChecklist");
+  const tmaSubmitMessage = document.getElementById("tmaSubmitMessage");
+  const tmaPhotos = document.getElementById("tmaPhotos");
+  const tmaPhotoList = document.getElementById("tmaPhotoList");
 
   const sheets = {
     tractor:["Tractor Checkout","🚜"],
@@ -86,6 +91,30 @@
     ]]
   ];
 
+
+  const tmaItems = [
+    ["FRAME, SUPPORT ASSY., AND CARTRIDGE ASSEMBLIES",[
+      "Frame free of damage.",
+      "Frame bolts tight and check all welds for cracks.",
+      "All 4 mounting pins secured w/ring cotter pins (truck mounted).",
+      "Hitch, stabilizers and safety chains attached to truck properly (trailer mounted).",
+      "Wheels and tires (trailer mounted).",
+      "Ride height correct (truck mounted).",
+      "Tension cables for stretching or damage.",
+      "Cartridge assemblies for mounting and damage."
+    ]],
+    ["ELECTRICAL",[
+      "Connection and condition of light plugs.",
+      "Condition of expose wiring.",
+      "Connection and condition of power cable.",
+      "Verify all lights for proper operation.",
+      "Check breakaway switch."
+    ]],
+    ["ARROW BOARD",[
+      "Mounting and wiring secured properly to truck.",
+      "All display function properly."
+    ]]
+  ];
 
   const tractorItems = [
     ["ENGINE COMPARTMENT",[
@@ -250,6 +279,7 @@
 
     truckForm.classList.add("hidden");
     tractorForm.classList.add("hidden");
+    tmaForm.classList.add("hidden");
     placeholderContent.classList.add("hidden");
 
     const now = new Date();
@@ -270,6 +300,11 @@
       const time = tractorForm.querySelector('[name="tractorTime"]');
       if(!date.value) date.value = dateValue;
       if(!time.value) time.value = timeValue;
+    } else if(key === "tma"){
+      tmaForm.classList.remove("hidden");
+      tmaSubmitMessage.classList.add("hidden");
+      const date = tmaForm.querySelector('[name="tmaDate"]');
+      if(!date.value) date.value = dateValue;
     } else {
       placeholderContent.classList.remove("hidden");
     }
@@ -323,6 +358,29 @@
     tractorSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
   });
 
+  tmaForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const rows = [...tmaChecklist.querySelectorAll(".check-row")];
+    const missing = rows.filter(row => !row.dataset.status);
+    const missingDefectNotes = rows.filter(row => row.dataset.status === "DEFECT" && !row.querySelector(".defect-note").value.trim());
+
+    if(missing.length){
+      alert(`Please mark every inspection item OK, DEFECT, or N/A. ${missing.length} item(s) are still unanswered.`);
+      missing[0].scrollIntoView({behavior:"smooth",block:"center"});
+      return;
+    }
+    if(missingDefectNotes.length){
+      alert("Please add a comment for every item marked DEFECT.");
+      missingDefectNotes[0].querySelector(".defect-note").focus();
+      return;
+    }
+    if(!tmaForm.reportValidity()) return;
+
+    tmaSubmitMessage.classList.remove("hidden");
+    tmaSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
+  });
+
+  tmaPhotos.addEventListener("change", () => showPhotoNames(tmaPhotos, tmaPhotoList));
   truckPhotos.addEventListener("change", () => showPhotoNames(truckPhotos, truckPhotoList));
   tractorPhotos.addEventListener("change", () => showPhotoNames(tractorPhotos, tractorPhotoList));
 
@@ -335,5 +393,6 @@
 
   buildChecklist();
   makeChecklist(tractorChecklist, tractorItems);
+  makeChecklist(tmaChecklist, tmaItems);
   setTimeout(showHome,5000);
 })();

@@ -26,3 +26,14 @@ v7 Truck Checkout changes:
   - Month: 1 through 12
   - Year: 26 through 60
 - Tractor Checkout remains unchanged.
+
+
+v8 TMA Checkout:
+- Added Trailer and Truck Mounted Attenuator Checkout under TMA Checkout.
+- Fields: Name, Location, Date, Attenuator #, Truck # Attenuator Is Attached To.
+- Full Frame/Support/Cartridge, Electrical, and Arrow Board checklist.
+- Every checklist line MUST have OK, DEFECT, or N/A before submission.
+- DEFECT selections require a written comment.
+- Added Needed Repairs / Notes and optional Photo Log.
+- Manager/Mechanic Review is intentionally excluded from the operator form for future approval workflow.
+- All previously approved Truck and Tractor behavior remains unchanged.
