@@ -270,3 +270,15 @@ v40 Profile Landing Pages:
 
 v41 Admin Mechanic Form Reset:
 - After successfully adding a Fleet Mechanic, the Work Location dropdown now resets along with the mechanic name, PIN, confirmation PIN, and Lead Mechanic checkbox.
+
+v42 Mechanic Back Navigation Fix:
+- Returning from a mechanic's personal landing page to the location roster now fully hides the mechanic personal screen, lock screen, submission detail, and reset screen before showing the roster.
+- Prevents the selected mechanic's landing page from remaining visible underneath the mechanic list.
+
+v43 Admin Master User List:
+- Adds Master User List to the Admin landing page.
+- Combines every Fleet Mechanic and Fleet District Manager into one Admin roster.
+- Each profile shows role, mechanic location, Lead Mechanic status, and Reset Required status.
+- Tapping a user opens Admin Profile Controls for credential reset and deletion.
+- Mechanic profiles also allow Admin to change work location and Lead Mechanic assignment.
+- Newly created profiles automatically appear in the Master User List.

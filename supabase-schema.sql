@@ -594,3 +594,15 @@ grant execute on function public.admin_reset_fleet_mechanic_pin(text,uuid) to an
 grant execute on function public.complete_fleet_mechanic_pin_reset(uuid,text,text) to anon, authenticated;
 grant execute on function public.admin_reset_fleet_district_manager_password(text,uuid) to anon, authenticated;
 grant execute on function public.complete_fleet_district_manager_password_reset(uuid,text,text) to anon, authenticated;
+
+create or replace function public.admin_update_fleet_mechanic_assignment(p_admin_password text,p_mechanic_id uuid,p_location text,p_is_lead boolean)
+returns boolean language plpgsql security definer set search_path=public as $$
+begin
+ if not exists(select 1 from public.app_admin where singleton=true and password_hash=crypt(p_admin_password,password_hash)) then raise exception 'Incorrect Admin password'; end if;
+ if not public.valid_tollway_location(p_location) then raise exception 'Invalid work location'; end if;
+ if p_is_lead and exists(select 1 from public.fleet_mechanics where location=p_location and is_lead=true and id<>p_mechanic_id) then raise exception 'This location already has a Lead Mechanic'; end if;
+ update public.fleet_mechanics set location=p_location,is_lead=p_is_lead where id=p_mechanic_id;
+ if not found then raise exception 'Mechanic not found'; end if;
+ return true;
+end; $$;
+grant execute on function public.admin_update_fleet_mechanic_assignment(text,uuid,text,boolean) to anon, authenticated;

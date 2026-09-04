@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#118a45" />
   <title>Illinois Tollway Checkout</title>
-  <link rel="stylesheet" href="styles.css?v=45" />
+  <link rel="stylesheet" href="styles.css?v=48" />
 </head>
 <body>
   <main id="app">
@@ -318,9 +318,38 @@
             <p class="intro">Admin</p>
             <p id="adminLocalTestingNote" class="field-help">When the shared backend is not connected, profiles created here are mock profiles saved only on this device for testing.</p>
             <div class="checkout-list admin-list">
+              <button id="adminMasterUsersBtn" type="button" class="checkout-btn"><span>Master User List</span></button>
               <button id="adminManageMechanicsBtn" type="button" class="checkout-btn"><span>Manage Fleet Mechanics</span></button>
               <button id="adminManageManagersBtn" type="button" class="checkout-btn"><span>Manage District Managers</span></button>
               <button id="adminResetPasswordBtn" type="button" class="checkout-btn"><span>Reset Admin Password</span></button>
+            </div>
+          </div>
+
+          <div id="adminMasterUsersView" class="hidden">
+            <p class="intro">Master User List</p>
+            <p class="field-help">All Fleet Mechanics and Fleet District Managers created in the system.</p>
+            <div id="adminMasterUserList" class="checkout-list mechanic-list"></div>
+          </div>
+
+          <div id="adminUserProfileView" class="hidden">
+            <p class="intro">Admin Profile Controls</p>
+            <div class="admin-user-profile-card">
+              <h2 id="adminProfileName">User</h2>
+              <p id="adminProfileRole" class="field-help"></p>
+              <div id="adminMechanicProfileFields" class="hidden">
+                <label for="adminProfileLocation">Work Location</label>
+                <select id="adminProfileLocation">
+                  <option>M1</option><option>M2</option><option>M3</option><option>M4</option><option>M5</option><option>M6</option><option>M7</option><option>M8</option><option>M11</option><option>M12</option><option>M14</option><option>M16</option><option>CAG</option><option>E02</option><option>E06</option><option>Sign Shop</option><option>Road Electric</option>
+                </select>
+                <label class="lead-mechanic-option"><input id="adminProfileIsLead" type="checkbox" /><span>Lead Mechanic</span></label>
+                <button id="adminSaveMechanicProfileBtn" class="submit-btn" type="button">Save Mechanic Assignment</button>
+              </div>
+              <p id="adminProfileStatus" class="field-help"></p>
+              <div class="admin-profile-control-stack">
+                <button id="adminProfileResetBtn" class="secondary-btn" type="button">Reset Credential</button>
+                <button id="adminProfileDeleteBtn" class="danger-btn" type="button">Delete Account</button>
+              </div>
+              <p id="adminProfileError" class="form-error hidden"></p>
             </div>
           </div>
 
@@ -859,6 +888,6 @@
 </main>
 
   <script src="config.js?v=1"></script>
-  <script src="app.js?v=46"></script>
+  <script src="app.js?v=48"></script>
 </body>
 </html>

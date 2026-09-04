@@ -70,6 +70,8 @@
   const adminScreen=document.getElementById("adminScreen"), adminSetupView=document.getElementById("adminSetupView"), adminLockView=document.getElementById("adminLockView"), adminLandingView=document.getElementById("adminLandingView"), adminMechanicsView=document.getElementById("adminMechanicsView"), adminManagersView=document.getElementById("adminManagersView"), adminResetView=document.getElementById("adminResetView");
   const adminSetupPassword=document.getElementById("adminSetupPassword"), adminSetupConfirmPassword=document.getElementById("adminSetupConfirmPassword"), adminSetupError=document.getElementById("adminSetupError"), createAdminPasswordBtn=document.getElementById("createAdminPasswordBtn");
   const adminPasswordEntry=document.getElementById("adminPasswordEntry"), adminLockError=document.getElementById("adminLockError"), unlockAdminBtn=document.getElementById("unlockAdminBtn");
+  const adminMasterUsersBtn=document.getElementById("adminMasterUsersBtn"), adminMasterUsersView=document.getElementById("adminMasterUsersView"), adminMasterUserList=document.getElementById("adminMasterUserList"), adminUserProfileView=document.getElementById("adminUserProfileView"), adminProfileName=document.getElementById("adminProfileName"), adminProfileRole=document.getElementById("adminProfileRole"), adminMechanicProfileFields=document.getElementById("adminMechanicProfileFields"), adminProfileLocation=document.getElementById("adminProfileLocation"), adminProfileIsLead=document.getElementById("adminProfileIsLead"), adminSaveMechanicProfileBtn=document.getElementById("adminSaveMechanicProfileBtn"), adminProfileStatus=document.getElementById("adminProfileStatus"), adminProfileResetBtn=document.getElementById("adminProfileResetBtn"), adminProfileDeleteBtn=document.getElementById("adminProfileDeleteBtn"), adminProfileError=document.getElementById("adminProfileError");
+  let selectedAdminUser=null;
   const adminManageMechanicsBtn=document.getElementById("adminManageMechanicsBtn"), adminManageManagersBtn=document.getElementById("adminManageManagersBtn"), adminResetPasswordBtn=document.getElementById("adminResetPasswordBtn");
   const adminMechanicLocation=document.getElementById("adminMechanicLocation"), adminMechanicName=document.getElementById("adminMechanicName"), adminMechanicPin=document.getElementById("adminMechanicPin"), adminMechanicConfirmPin=document.getElementById("adminMechanicConfirmPin"), adminMechanicIsLead=document.getElementById("adminMechanicIsLead"), adminMechanicError=document.getElementById("adminMechanicError"), adminAddMechanicBtn=document.getElementById("adminAddMechanicBtn"), adminMechanicList=document.getElementById("adminMechanicList");
   const adminManagerName=document.getElementById("adminManagerName"), adminManagerPassword=document.getElementById("adminManagerPassword"), adminManagerConfirmPassword=document.getElementById("adminManagerConfirmPassword"), adminManagerError=document.getElementById("adminManagerError"), adminAddManagerBtn=document.getElementById("adminAddManagerBtn"), adminManagerList=document.getElementById("adminManagerList");
@@ -762,6 +764,16 @@
     return backendRpc("admin_delete_fleet_district_manager",{p_admin_password:activeAdminPassword,p_manager_id:managerId});
   }
 
+  async function adminUpdateMechanicAssignment(mechanicId,location,isLead){
+    if(!backendIsConfigured()){
+      const rows=localMechanics(), i=rows.findIndex(x=>x.id===mechanicId);
+      if(i<0) throw new Error("Mechanic not found.");
+      if(isLead && rows.some(x=>x.id!==mechanicId && x.location===location && x.is_lead)) throw new Error("This location already has a Lead Mechanic.");
+      rows[i].location=location; rows[i].is_lead=Boolean(isLead); saveLocalProfiles(LOCAL_MECHANICS_KEY,rows); return true;
+    }
+    return backendRpc("admin_update_fleet_mechanic_assignment",{p_admin_password:activeAdminPassword,p_mechanic_id:mechanicId,p_location:location,p_is_lead:Boolean(isLead)});
+  }
+
   async function renderMechanicRoster(){
     if(!currentFleetLocation) return;
     mechanicList.innerHTML = "";
@@ -969,11 +981,11 @@
 
   function hideAdminViews(){
     adminScreen.classList.add("hidden");
-    [adminSetupView,adminLockView,adminLandingView,adminMechanicsView,adminManagersView,adminResetView].forEach(v=>v.classList.add("hidden"));
+    [adminSetupView,adminLockView,adminLandingView,adminMasterUsersView,adminUserProfileView,adminMechanicsView,adminManagersView,adminResetView].forEach(v=>v.classList.add("hidden"));
   }
 
   function showAdminSubView(view,title){
-    [adminSetupView,adminLockView,adminLandingView,adminMechanicsView,adminManagersView,adminResetView].forEach(v=>v.classList.add("hidden"));
+    [adminSetupView,adminLockView,adminLandingView,adminMasterUsersView,adminUserProfileView,adminMechanicsView,adminManagersView,adminResetView].forEach(v=>v.classList.add("hidden"));
     adminScreen.classList.remove("hidden"); view.classList.remove("hidden"); sheetTitle.textContent=title; addMechanicBtn.classList.add("hidden"); mechanicSettingsBtn.classList.add("hidden"); bottomNav.classList.add("hidden"); window.scrollTo(0,0);
   }
 
@@ -1067,6 +1079,42 @@
     }catch(e){adminManagerError.textContent=e.message;adminManagerError.classList.remove("hidden");}
   }
 
+  async function getAllAdminMechanics(){
+    if(!backendIsConfigured()) return localMechanics();
+    const all=[]; for(const loc of ["M1","M2","M3","M4","M5","M6","M7","M8","M11","M12","M14","M16","CAG","E02","E06","Sign Shop","Road Electric"]){ const rows=await getMechanics(loc); all.push(...rows); } return all;
+  }
+  async function renderAdminMasterUsers(){
+    adminMasterUserList.innerHTML="";
+    try{
+      const mechanics=await getAllAdminMechanics(), managers=await getDistrictManagers();
+      const users=[
+        ...mechanics.map(x=>({...x,_type:"mechanic"})),
+        ...managers.map(x=>({...x,_type:"manager"}))
+      ].sort((a,b)=>a.name.localeCompare(b.name));
+      if(!users.length){adminMasterUserList.innerHTML='<div class="mechanic-empty-state">No user profiles have been created yet.</div>';return;}
+      users.forEach(u=>{
+        const btn=document.createElement("button"); btn.type="button"; btn.className="master-user-card";
+        const role=u._type==="mechanic" ? `Fleet Mechanic • ${u.location}${u.is_lead?" • Lead Mechanic":""}` : "Fleet District Manager";
+        btn.innerHTML=`<span class="master-user-name"></span><span class="master-user-meta"></span><span class="master-user-arrow">›</span>`;
+        btn.querySelector(".master-user-name").textContent=u.name;
+        btn.querySelector(".master-user-meta").textContent=role+(u.reset_required?" • Reset Required":"");
+        btn.onclick=()=>showAdminUserProfile(u);
+        adminMasterUserList.appendChild(btn);
+      });
+    }catch(e){adminMasterUserList.innerHTML=`<p class="form-error">${e.message}</p>`;}
+  }
+  function showAdminUserProfile(user){
+    selectedAdminUser=user; currentDetailView="adminUserProfile";
+    showAdminSubView(adminUserProfileView,"Admin Profile Controls");
+    adminProfileName.textContent=user.name;
+    adminProfileRole.textContent=user._type==="mechanic"?"Fleet Mechanic":"Fleet District Manager";
+    adminProfileStatus.textContent=user.reset_required?"Status: Reset Required":"Status: Active";
+    adminMechanicProfileFields.classList.toggle("hidden",user._type!=="mechanic");
+    if(user._type==="mechanic"){adminProfileLocation.value=user.location;adminProfileIsLead.checked=Boolean(user.is_lead);}
+    adminProfileResetBtn.textContent=user._type==="mechanic"?"Reset PIN":"Reset Password";
+    adminProfileError.classList.add("hidden");
+  }
+
   function showFleetMechanicsLanding(){
     mechanicResetScreen.classList.add("hidden"); districtManagerResetScreen.classList.add("hidden");
     hideAdminViews();
@@ -1095,6 +1143,10 @@
     currentFleetLocation = location;
     fleetMechanicsLanding.classList.add("hidden");
     fleetMechanicRoster.classList.add("hidden");
+    mechanicLockScreen.classList.add("hidden");
+    mechanicPersonalScreen.classList.add("hidden");
+    mechanicSubmissionDetail.classList.add("hidden");
+    mechanicResetScreen.classList.add("hidden");
     addMechanicBtn.classList.add("hidden");
     utilityPageContent.classList.add("hidden");
     fleetMechanicRoster.classList.remove("hidden");
@@ -2092,6 +2144,28 @@
       adminLockError.textContent=e.message;
       adminLockError.classList.remove("hidden");
     }
+  };
+  adminMasterUsersBtn.onclick=()=>{currentDetailView="adminMasterUsers";showAdminSubView(adminMasterUsersView,"Master User List");renderAdminMasterUsers();};
+  adminSaveMechanicProfileBtn.onclick=async()=>{
+    if(!selectedAdminUser||selectedAdminUser._type!=="mechanic")return;
+    try{await adminUpdateMechanicAssignment(selectedAdminUser.id,adminProfileLocation.value,adminProfileIsLead.checked);selectedAdminUser.location=adminProfileLocation.value;selectedAdminUser.is_lead=adminProfileIsLead.checked;alert("Mechanic assignment updated.");showAdminUserProfile(selectedAdminUser);}catch(e){adminProfileError.textContent=e.message;adminProfileError.classList.remove("hidden");}
+  };
+  adminProfileResetBtn.onclick=async()=>{
+    if(!selectedAdminUser)return;
+    try{
+      let code;
+      if(selectedAdminUser._type==="mechanic"){
+        code=backendIsConfigured()?await backendRpc("admin_reset_fleet_mechanic_pin",{p_admin_password:activeAdminPassword,p_mechanic_id:selectedAdminUser.id}):(()=>{const c=createLocalReset("mechanic",selectedAdminUser.id),rows=localMechanics(),i=rows.findIndex(x=>x.id===selectedAdminUser.id);if(i>=0){rows[i].reset_required=true;saveLocalProfiles(LOCAL_MECHANICS_KEY,rows);}return c;})();
+      }else{
+        code=backendIsConfigured()?await backendRpc("admin_reset_fleet_district_manager_password",{p_admin_password:activeAdminPassword,p_manager_id:selectedAdminUser.id}):(()=>{const c=createLocalReset("manager",selectedAdminUser.id),rows=localManagers(),i=rows.findIndex(x=>x.id===selectedAdminUser.id);if(i>=0){rows[i].reset_required=true;saveLocalProfiles(LOCAL_MANAGERS_KEY,rows);}return c;})();
+      }
+      selectedAdminUser.reset_required=true;adminProfileStatus.textContent="Status: Reset Required";
+      alert(`Temporary reset code for ${selectedAdminUser.name}: ${code}`);
+    }catch(e){adminProfileError.textContent=e.message;adminProfileError.classList.remove("hidden");}
+  };
+  adminProfileDeleteBtn.onclick=async()=>{
+    if(!selectedAdminUser||!confirm(`Delete ${selectedAdminUser.name}?`))return;
+    try{if(selectedAdminUser._type==="mechanic")await adminDeleteMechanic(selectedAdminUser.id);else await adminDeleteDistrictManager(selectedAdminUser.id);selectedAdminUser=null;currentDetailView="adminMasterUsers";showAdminSubView(adminMasterUsersView,"Master User List");renderAdminMasterUsers();}catch(e){adminProfileError.textContent=e.message;adminProfileError.classList.remove("hidden");}
   };
   adminManageMechanicsBtn.onclick=()=>{currentDetailView="adminMechanics";showAdminSubView(adminMechanicsView,"Manage Fleet Mechanics");renderAdminMechanics();};
   adminManageManagersBtn.onclick=()=>{currentDetailView="adminManagers";showAdminSubView(adminManagersView,"Manage District Managers");renderAdminManagers();};
