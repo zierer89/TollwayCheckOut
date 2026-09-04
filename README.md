@@ -97,3 +97,13 @@ v15 Settings/About Navigation Fix:
 v16 About Credit:
 - Added “Mobile app created by Ryan Zierer 2026” to the About section.
 - All approved v15 behavior remains unchanged.
+
+v17 Lane Blade Inspection:
+- Added the Lane Blade Inspection Sheet using the same approved form format as the existing checkout sheets.
+- Header fields are Date, Time, Inspected By, Truck Lane Blade Is Attached To, and Location.
+- Added Fluid Levels, Visual Inspection, and Operate Blade and Check sections from the paper form.
+- All checklist lines require OK / DEFECT / N/A.
+- DEFECT requires a written explanation.
+- Includes Needed Repairs / Notes and optional Photo Log.
+- Mechanic Review remains excluded for the future approval workflow.
+- All v16 approved checkout content and app behavior are preserved.

@@ -37,6 +37,11 @@
   const sweeperSubmitMessage = document.getElementById("sweeperSubmitMessage");
   const sweeperPhotos = document.getElementById("sweeperPhotos");
   const sweeperPhotoList = document.getElementById("sweeperPhotoList");
+  const laneForm = document.getElementById("laneForm");
+  const laneChecklist = document.getElementById("laneChecklist");
+  const laneSubmitMessage = document.getElementById("laneSubmitMessage");
+  const lanePhotos = document.getElementById("lanePhotos");
+  const lanePhotoList = document.getElementById("lanePhotoList");
 
   const sheets = {
     tractor:["Tractor Checkout","🚜"],
@@ -105,6 +110,30 @@
     ]]
   ];
 
+
+  const laneItems = [
+    ["FLUID LEVELS",[
+      "Hydraulic Oil Level"
+    ]],
+    ["VISUAL INSPECTION",[
+      "Damaged, bent, missing or broken bolts and pins",
+      "Inspect frame for damage rust or broken welds",
+      "Cylinder and wing pivot pins free from damage",
+      "Check Blade wear 1/8” Minimum",
+      "Check Maul Board for damage",
+      "Check for fraying or missing pieces",
+      "Check hoses for leaks"
+    ]],
+    ["OPERATE BLADE AND CHECK",[
+      "Verify Light is on/Unstowed",
+      "Verify Light is off/Stowed",
+      "Complete movement",
+      "Hydraulic Leaks",
+      "Camera Operation",
+      "Wing Operation",
+      "Assure blade will not deploy above 20 M.P.H."
+    ]]
+  ];
 
   const sweeperItems = [
     ["TRUCK ENGINE COMPARTMENT",[
@@ -332,6 +361,7 @@
     tmaForm.classList.add("hidden");
     equipmentForm.classList.add("hidden");
     sweeperForm.classList.add("hidden");
+    laneForm.classList.add("hidden");
     placeholderContent.classList.add("hidden");
 
     const now = new Date();
@@ -362,6 +392,13 @@
       equipmentSubmitMessage.classList.add("hidden");
       const date = equipmentForm.querySelector('[name="equipmentDate"]');
       const time = equipmentForm.querySelector('[name="equipmentTime"]');
+      if(!date.value) date.value = dateValue;
+      if(!time.value) time.value = timeValue;
+    } else if(key === "lane"){
+      laneForm.classList.remove("hidden");
+      laneSubmitMessage.classList.add("hidden");
+      const date = laneForm.querySelector('[name="laneDate"]');
+      const time = laneForm.querySelector('[name="laneTime"]');
       if(!date.value) date.value = dateValue;
       if(!time.value) time.value = timeValue;
     } else if(key === "sweeper"){
@@ -423,6 +460,28 @@
     tractorSubmitMessage.classList.remove("hidden");
     tractorSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
   });
+
+  laneForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const rows=[...laneChecklist.querySelectorAll(".check-row")];
+    const missing=rows.filter(row=>!row.dataset.status);
+    const missingDefectNotes=rows.filter(row=>row.dataset.status==="DEFECT" && !row.querySelector(".defect-note").value.trim());
+    if(missing.length){
+      alert(`Please mark every inspection item OK, DEFECT, or N/A. ${missing.length} item(s) are still unanswered.`);
+      missing[0].scrollIntoView({behavior:"smooth",block:"center"});
+      return;
+    }
+    if(missingDefectNotes.length){
+      alert("Please add a comment for every item marked DEFECT.");
+      missingDefectNotes[0].querySelector(".defect-note").focus();
+      return;
+    }
+    if(!laneForm.reportValidity()) return;
+    laneSubmitMessage.classList.remove("hidden");
+    laneSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
+  });
+
+  lanePhotos.addEventListener("change",()=>showPhotoNames(lanePhotos,lanePhotoList));
 
   sweeperForm.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -527,6 +586,7 @@
     tmaForm.classList.add("hidden");
     equipmentForm.classList.add("hidden");
     sweeperForm.classList.add("hidden");
+    laneForm.classList.add("hidden");
     placeholderContent.classList.add("hidden");
 
     utilityPageContent.classList.remove("hidden");
@@ -554,5 +614,6 @@
   makeChecklist(tmaChecklist, tmaItems);
   makeChecklist(equipmentChecklist, equipmentItems);
   makeChecklist(sweeperChecklist, sweeperItems);
+  makeChecklist(laneChecklist, laneItems);
   setTimeout(showHome,5000);
 })();
