@@ -60,6 +60,7 @@
   const districtManagerResetScreen=document.getElementById("districtManagerResetScreen"), districtManagerResetName=document.getElementById("districtManagerResetName"), districtManagerResetCode=document.getElementById("districtManagerResetCode"), districtManagerResetNewPassword=document.getElementById("districtManagerResetNewPassword"), districtManagerResetConfirmPassword=document.getElementById("districtManagerResetConfirmPassword"), districtManagerResetError=document.getElementById("districtManagerResetError"), completeDistrictManagerResetBtn=document.getElementById("completeDistrictManagerResetBtn");
   const mechanicLandingContent=document.getElementById("mechanicLandingContent"),mechanicLandingName=document.getElementById("mechanicLandingName"),mechanicWelcome=document.getElementById("mechanicWelcome"),mechanicViewSheetsBtn=document.getElementById("mechanicViewSheetsBtn");
   const districtManagerLandingContent=document.getElementById("districtManagerLandingContent"),districtManagerLandingName=document.getElementById("districtManagerLandingName"),districtManagerWelcome=document.getElementById("districtManagerWelcome"),districtManagerViewSheetsBtn=document.getElementById("districtManagerViewSheetsBtn"),districtManagerSheetsView=document.getElementById("districtManagerSheetsView");
+  const districtManagerExportPdfBtn=document.getElementById("districtManagerExportPdfBtn"),districtManagerExportView=document.getElementById("districtManagerExportView"),districtManagerExportMonth=document.getElementById("districtManagerExportMonth"),districtManagerExportYear=document.getElementById("districtManagerExportYear"),districtManagerGeneratePdfBtn=document.getElementById("districtManagerGeneratePdfBtn"),districtManagerExportStatus=document.getElementById("districtManagerExportStatus");
   const districtManagerCalendarView=document.getElementById("districtManagerCalendarView"),districtManagerCalendarGrid=document.getElementById("districtManagerCalendarGrid"),districtManagerCalendarMonthTitle=document.getElementById("districtManagerCalendarMonthTitle"),districtManagerCalendarPrevBtn=document.getElementById("districtManagerCalendarPrevBtn"),districtManagerCalendarNextBtn=document.getElementById("districtManagerCalendarNextBtn"),districtManagerDayView=document.getElementById("districtManagerDayView"),districtManagerDayTitle=document.getElementById("districtManagerDayTitle"),districtManagerDaySummary=document.getElementById("districtManagerDaySummary"),districtManagerSubmissionList=document.getElementById("districtManagerSubmissionList"),districtManagerSheetsEmpty=document.getElementById("districtManagerSheetsEmpty");
   const mechanicInboxLocation = document.getElementById("mechanicInboxLocation");
   const mechanicSubmissionEmpty = document.getElementById("mechanicSubmissionEmpty");
@@ -605,15 +606,48 @@
     return details;
   }
 
+  async function uploadSubmissionPhotos(submissionId,form){
+    const input=form.querySelector('input[type="file"][multiple]');
+    if(!input?.files?.length) return [];
+    const cfg=backendConfig(),uploaded=[];
+    for(const file of [...input.files]){
+      const safeName=(file.name||"photo.jpg").replace(/[^a-zA-Z0-9._-]/g,"_");
+      const objectPath=`${submissionId}/${crypto.randomUUID()}-${safeName}`;
+      const res=await fetch(`${cfg.url}/storage/v1/object/checkout-photos/${encodeURI(objectPath)}`,{
+        method:"POST",
+        headers:{"apikey":cfg.key,"Authorization":`Bearer ${cfg.key}`,"x-upsert":"false","Content-Type":file.type||"application/octet-stream"},
+        body:file
+      });
+      if(!res.ok) throw new Error(`Photo upload failed (${res.status}). ${await res.text()}`);
+      await backendRpc("attach_checkout_photo",{p_submission_id:submissionId,p_object_path:objectPath,p_file_name:file.name||safeName,p_mime_type:file.type||"application/octet-stream"});
+      uploaded.push(objectPath);
+    }
+    return uploaded;
+  }
+
+  async function getSubmissionPhotos(submissionId){
+    if(!backendIsConfigured()) return [];
+    const rows=await backendRpc("get_checkout_photos",{p_submission_id:submissionId});
+    return Array.isArray(rows)?rows:[];
+  }
+
+  async function fetchPrivatePhoto(objectPath){
+    const cfg=backendConfig();
+    const res=await fetch(`${cfg.url}/storage/v1/object/checkout-photos/${encodeURI(objectPath)}`,{headers:{"apikey":cfg.key,"Authorization":`Bearer ${cfg.key}`}});
+    if(!res.ok) throw new Error(`Photo could not be loaded (${res.status}).`);
+    return res.blob();
+  }
+
+  async function blobToDataUrl(blob){
+    return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(blob);});
+  }
+
   async function routeSubmissionToLocation(form){
     const location = readFormLocation(form);
     if(!location) throw new Error("Select a location before submitting.");
-
-    return backendRpc("submit_checkout_sheet",{
-      p_location: location,
-      p_form_type: titleFromForm(form),
-      p_details: formSnapshot(form)
-    });
+    const submissionId=await backendRpc("submit_checkout_sheet",{p_location:location,p_form_type:titleFromForm(form),p_details:formSnapshot(form)});
+    await uploadSubmissionPhotos(submissionId,form);
+    return submissionId;
   }
 
   function finishSuccessfulSubmission(form,messageEl){
@@ -972,6 +1006,23 @@
       section.appendChild(row);
     });
     card.appendChild(section);
+
+    const photoSection=document.createElement("div");
+    photoSection.className="submission-photo-section";
+    const photoHeading=document.createElement("h3");photoHeading.textContent="Photo Log";photoSection.appendChild(photoHeading);
+    const photoGrid=document.createElement("div");photoGrid.className="submission-photo-grid";photoGrid.textContent="Loading photos…";photoSection.appendChild(photoGrid);
+    card.appendChild(photoSection);
+
+    getSubmissionPhotos(item.id).then(async photos=>{
+      photoGrid.innerHTML="";
+      if(!photos.length){const e=document.createElement("div");e.className="photo-empty";e.textContent="No photos attached.";photoGrid.appendChild(e);return;}
+      for(const photo of photos){
+        try{
+          const blob=await fetchPrivatePhoto(photo.object_path),url=URL.createObjectURL(blob),img=document.createElement("img");
+          img.src=url;img.alt=photo.file_name||"Checkout photo";img.loading="lazy";img.onclick=()=>window.open(url,"_blank");photoGrid.appendChild(img);
+        }catch(e){const x=document.createElement("div");x.className="photo-empty";x.textContent="Photo unavailable";photoGrid.appendChild(x);}
+      }
+    }).catch(()=>{photoGrid.textContent="Photos could not be loaded.";});
 
     if(item.reviewStatus === "Reviewed"){
       const reviewed = document.createElement("div");
@@ -1607,6 +1658,11 @@
       showDistrictManagerDay(selectedDistrictManagerDateKey);
     } else if(currentDetailView === "districtManagerDay"){
       renderDistrictManagerCalendar();
+    } else if(currentDetailView === "districtManagerExport"){
+      districtManagerExportView.classList.add("hidden");
+      districtManagerLandingContent.classList.remove("hidden");
+      currentDetailView="districtManagerPersonal";
+      sheetTitle.textContent=selectedDistrictManager.name;
     } else if(currentDetailView === "districtManagerCalendar"){
       districtManagerSheetsView.classList.add("hidden");
       districtManagerLandingContent.classList.remove("hidden");
@@ -1911,6 +1967,7 @@
     districtManagerWelcome.textContent = `Welcome, ${selectedDistrictManager.name}`;
     districtManagerLandingContent.classList.remove("hidden");
     districtManagerSheetsView.classList.add("hidden");
+    districtManagerExportView.classList.add("hidden");
     districtManagerCalendarView.classList.remove("hidden");
     districtManagerDayView.classList.add("hidden");
     districtManagerSheetsEmpty.classList.add("hidden");
@@ -2245,6 +2302,74 @@
       renderDistrictManagerCalendar();
     }
   };
+
+  function exportMonthName(month){return new Intl.DateTimeFormat("en-US",{month:"long",timeZone:"UTC"}).format(new Date(Date.UTC(2026,month-1,1)));}
+  function pdfSafe(v){return String(v??"").replace(/[^\x20-\x7E\u00A0-\u00FF]/g," ");}
+
+  async function generateMonthlyReviewedPdf(){
+    if(!selectedDistrictManager||!activeDistrictManagerPassword)return;
+    const month=Number(districtManagerExportMonth.value),year=Number(districtManagerExportYear.value);
+    if(!month||!year){alert("Select a month and year.");return;}
+    districtManagerGeneratePdfBtn.disabled=true;
+    districtManagerExportStatus.classList.remove("hidden");
+    districtManagerExportStatus.textContent="Preparing reviewed checkout sheets…";
+    try{
+      let rows=normalizeManagerSubmissionRows(await getDistrictManagerReviewedSubmissions(selectedDistrictManager.id,activeDistrictManagerPassword));
+      rows=rows.filter(item=>{const p=centralParts(item.reviewedAt||item.submittedAt);return p&&p.year===year&&p.month===month;});
+      if(!rows.length){districtManagerExportStatus.textContent="No reviewed checkout sheets were found for that month.";return;}
+      const jsPDF=window.jspdf?.jsPDF;if(!jsPDF)throw new Error("PDF library did not load.");
+      const doc=new jsPDF({unit:"pt",format:"letter"}),pageW=612,pageH=792,margin=42;
+      let y=margin;
+      const nextPage=()=>{doc.addPage();y=margin;};
+      const ensure=n=>{if(y+n>pageH-margin)nextPage();};
+      const line=(text,size=10,bold=false)=>{doc.setFont("helvetica",bold?"bold":"normal");doc.setFontSize(size);const parts=doc.splitTextToSize(pdfSafe(text),pageW-margin*2);ensure(parts.length*(size+3)+3);doc.text(parts,margin,y);y+=parts.length*(size+3);};
+
+      line("Illinois Tollway - Monthly Reviewed Checkout Sheets",18,true);y+=5;
+      line(`${exportMonthName(month)} ${year}`,14,true);
+      line(`${rows.length} reviewed checkout ${rows.length===1?"sheet":"sheets"} from all Tollway locations`,10,false);y+=12;
+
+      const groups={};rows.sort((a,b)=>a.location.localeCompare(b.location,undefined,{numeric:true})||new Date(a.submittedAt)-new Date(b.submittedAt));rows.forEach(r=>(groups[r.location]??=[]).push(r));
+      for(const location of Object.keys(groups).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))){
+        ensure(35);line(location,14,true);
+        for(const item of groups[location]){
+          ensure(85);doc.setDrawColor(190);doc.line(margin,y,pageW-margin,y);y+=12;
+          line(item.type,13,true);
+          const submitted=new Intl.DateTimeFormat("en-US",{timeZone:MECHANIC_TIME_ZONE,dateStyle:"medium",timeStyle:"short"}).format(new Date(item.submittedAt));
+          const reviewed=item.reviewedAt?new Intl.DateTimeFormat("en-US",{timeZone:MECHANIC_TIME_ZONE,dateStyle:"medium",timeStyle:"short"}).format(new Date(item.reviewedAt)):"";
+          line(`Submitted: ${submitted}`,9);line(`Reviewed by: ${item.reviewedByName||"Lead Mechanic"}${reviewed?` - ${reviewed}`:""}`,9);y+=4;
+          for(const d of item.details||[])line(`${d.key||"Field"}: ${d.value||""}`,9);
+          const photos=await getSubmissionPhotos(item.id);
+          if(photos.length){
+            line("Photo Log",10,true);
+            let x=margin,py=y;const pw=150,ph=105,gap=10;
+            for(const photo of photos){
+              if(x+pw>pageW-margin){x=margin;py+=ph+gap;}
+              if(py+ph>pageH-margin){nextPage();py=y;x=margin;}
+              try{
+                const data=await blobToDataUrl(await fetchPrivatePhoto(photo.object_path));
+                doc.addImage(data,data.startsWith("data:image/png")?"PNG":"JPEG",x,py,pw,ph,undefined,"FAST");
+              }catch(e){}
+              x+=pw+gap;
+            }
+            y=py+ph+12;
+          }
+          y+=10;
+        }
+      }
+      const filename=`Illinois-Tollway-Reviewed-Checkout-Sheets-${exportMonthName(month)}-${year}.pdf`;
+      doc.save(filename);districtManagerExportStatus.textContent=`PDF generated: ${filename}`;
+    }catch(e){districtManagerExportStatus.textContent=`PDF could not be generated. ${e.message}`;}
+    finally{districtManagerGeneratePdfBtn.disabled=false;}
+  }
+
+  districtManagerExportPdfBtn.onclick=()=>{
+    const now=centralParts(new Date());
+    districtManagerExportMonth.value=String(now.month);districtManagerExportYear.value=String(now.year);
+    districtManagerLandingContent.classList.add("hidden");districtManagerSheetsView.classList.add("hidden");districtManagerExportView.classList.remove("hidden");
+    districtManagerExportStatus.classList.add("hidden");districtManagerExportStatus.textContent="";
+    currentDetailView="districtManagerExport";sheetTitle.textContent="Export Monthly PDF";window.scrollTo({top:0,left:0,behavior:"auto"});
+  };
+  districtManagerGeneratePdfBtn.onclick=generateMonthlyReviewedPdf;
 
   districtManagerViewSheetsBtn.onclick=()=>{
     districtManagerLandingContent.classList.add("hidden");

@@ -322,3 +322,11 @@ v49 District Manager Reviewed Checkout Sheets:
 - Each sheet shows type, unit, operator, submitted time, reviewing mechanic, and Reviewed status.
 - District Managers are read-only: they cannot sign off or change mechanic reviews.
 - Live Supabase projects must run v49-supabase-manager-reviewed-sheets.sql once before this page can load.
+
+
+v53 Photo + PDF Export:
+- Photo Log images upload to Supabase Storage bucket `checkout-photos`.
+- Mechanics and District Managers can view attached photos on the full checkout-sheet detail.
+- Fleet District Managers get Export Monthly PDF.
+- Monthly PDF includes reviewed sheets from all locations for the selected month/year, full saved form data, review information, and photos.
+- Run `v53-supabase-photo-storage.sql` once before testing photos.
