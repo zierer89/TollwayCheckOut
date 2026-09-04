@@ -26,6 +26,11 @@
   const unlockMechanicBtn = document.getElementById("unlockMechanicBtn");
   const mechanicPersonalScreen = document.getElementById("mechanicPersonalScreen");
   const mechanicPersonalHeading = document.getElementById("mechanicPersonalHeading");
+  const mechanicInboxLocation = document.getElementById("mechanicInboxLocation");
+  const mechanicSubmissionEmpty = document.getElementById("mechanicSubmissionEmpty");
+  const mechanicSubmissionList = document.getElementById("mechanicSubmissionList");
+  const mechanicSubmissionDetail = document.getElementById("mechanicSubmissionDetail");
+  const submissionDetailContent = document.getElementById("submissionDetailContent");
   const utilityPageHeading = document.getElementById("utilityPageHeading");
   const utilityPageText = document.getElementById("utilityPageText");
   const bottomNav = document.querySelector(".bottom-nav");
@@ -356,48 +361,236 @@
   let selectedMechanic = null;
   let currentDetailView = "home";
 
-  async function hashPin(pin){
-    const data = new TextEncoder().encode(pin);
-    const digest = await crypto.subtle.digest("SHA-256", data);
-    return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  let activeMechanicPin = "";
+
+  function backendConfig(){
+    const cfg = window.TOLLWAY_BACKEND || {};
+    const url = String(cfg.SUPABASE_URL || "").replace(/\/+$/,"");
+    const key = String(cfg.SUPABASE_ANON_KEY || "");
+    const configured =
+      url.startsWith("https://") &&
+      !url.includes("PASTE_") &&
+      key &&
+      !key.includes("PASTE_");
+    return {url,key,configured};
   }
 
-  function mechanicsStorageKey(location){
-    return `illinoisTollwayFleetMechanics:${location}`;
+  async function backendRpc(functionName, payload){
+    const cfg = backendConfig();
+    if(!cfg.configured){
+      throw new Error("Shared online database is not configured yet. Add the Supabase project URL and anon key to config.js.");
+    }
+
+    const response = await fetch(`${cfg.url}/rest/v1/rpc/${functionName}`,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "apikey":cfg.key,
+        "Authorization":`Bearer ${cfg.key}`
+      },
+      body:JSON.stringify(payload || {})
+    });
+
+    let data = null;
+    const text = await response.text();
+    if(text){
+      try{ data = JSON.parse(text); }
+      catch{ data = text; }
+    }
+
+    if(!response.ok){
+      const message =
+        (data && typeof data === "object" && (data.message || data.hint || data.details)) ||
+        (typeof data === "string" && data) ||
+        `Database request failed (${response.status})`;
+      throw new Error(message);
+    }
+    return data;
   }
 
-  function getMechanics(location){
+  function titleFromForm(form){
+    if(form === truckForm) return "Truck Checkout";
+    if(form === tractorForm) return "Tractor Checkout";
+    if(form === tmaForm) return "TMA Checkout";
+    if(form === equipmentForm) return "Equipment Checkout";
+    if(form === sweeperForm) return "Sweeper Checkout";
+    if(form === laneForm) return "Lane Blade Inspection";
+    return "Checkout Sheet";
+  }
+
+  function readFormLocation(form){
+    const locationField = [...form.querySelectorAll("select")].find(s =>
+      /location/i.test(s.name || "") || /location/i.test((s.closest("label")?.textContent || ""))
+    );
+    return locationField ? locationField.value : "";
+  }
+
+  function formSnapshot(form){
+    const details = [];
+    form.querySelectorAll("input, select, textarea").forEach(el=>{
+      if(el.type === "file" || el.type === "button" || el.type === "submit") return;
+      if(el.classList.contains("defect-note") && !el.value.trim()) return;
+      const label = el.closest("label");
+      let key = label ? label.childNodes[0]?.textContent?.trim() : "";
+      if(!key) key = el.name || el.id || "Field";
+      let value = el.value;
+      if(el.type === "checkbox" || el.type === "radio") value = el.checked ? "Yes" : "No";
+      if(value !== "") details.push({key,value});
+    });
+
+    form.querySelectorAll(".check-row").forEach(row=>{
+      const itemText = row.querySelector(".check-item-text")?.textContent?.trim()
+        || row.querySelector(".check-label")?.textContent?.trim()
+        || row.firstElementChild?.textContent?.trim()
+        || "Inspection Item";
+      if(row.dataset.status){
+        const note = row.querySelector(".defect-note")?.value?.trim() || "";
+        details.push({key:itemText, value: note ? `${row.dataset.status} — ${note}` : row.dataset.status});
+      }
+    });
+    return details;
+  }
+
+  async function routeSubmissionToLocation(form){
+    const location = readFormLocation(form);
+    if(!location) throw new Error("Select a location before submitting.");
+
+    return backendRpc("submit_checkout_sheet",{
+      p_location: location,
+      p_form_type: titleFromForm(form),
+      p_details: formSnapshot(form)
+    });
+  }
+
+  async function getMechanics(location){
+    const rows = await backendRpc("list_fleet_mechanics",{p_location:location});
+    return Array.isArray(rows) ? rows : [];
+  }
+
+  async function createMechanic(location,name,pin){
+    return backendRpc("create_fleet_mechanic",{
+      p_location:location,
+      p_name:name,
+      p_pin:pin
+    });
+  }
+
+  async function verifyMechanicPin(mechanicId,pin){
+    return backendRpc("verify_fleet_mechanic_pin",{
+      p_mechanic_id:mechanicId,
+      p_pin:pin
+    });
+  }
+
+  async function getMechanicSubmissions(mechanicId,pin){
+    const rows = await backendRpc("get_mechanic_submissions",{
+      p_mechanic_id:mechanicId,
+      p_pin:pin
+    });
+    return Array.isArray(rows) ? rows : [];
+  }
+
+  async function renderMechanicRoster(){
+    if(!currentFleetLocation) return;
+    mechanicList.innerHTML = "";
+    mechanicEmptyState.classList.add("hidden");
+
     try{
-      const saved = JSON.parse(localStorage.getItem(mechanicsStorageKey(location)) || "[]");
-      return Array.isArray(saved) ? saved : [];
-    }catch{
-      return [];
+      const mechanics = await getMechanics(currentFleetLocation);
+      mechanicEmptyState.classList.toggle("hidden", mechanics.length > 0);
+
+      mechanics.forEach(mechanic=>{
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "mechanic-card";
+        card.textContent = mechanic.name;
+        card.addEventListener("click",()=>showMechanicLock(mechanic));
+        mechanicList.appendChild(card);
+      });
+    }catch(err){
+      mechanicEmptyState.classList.remove("hidden");
+      mechanicEmptyState.textContent = err.message;
     }
   }
 
-  function saveMechanics(location, mechanics){
-    localStorage.setItem(mechanicsStorageKey(location), JSON.stringify(mechanics));
+  async function renderSubmissionInbox(){
+    if(!currentFleetLocation || !selectedMechanic || !activeMechanicPin) return;
+    mechanicSubmissionList.innerHTML = "";
+    mechanicSubmissionEmpty.classList.add("hidden");
+    mechanicInboxLocation.textContent = `Submitted sheets for ${currentFleetLocation}`;
+
+    try{
+      const rows = await getMechanicSubmissions(selectedMechanic.id,activeMechanicPin);
+      const items = rows.map(row=>({
+        id:row.id,
+        type:row.form_type,
+        location:row.location,
+        submittedAt:row.submitted_at,
+        details:Array.isArray(row.details) ? row.details : []
+      }));
+
+      mechanicSubmissionEmpty.classList.toggle("hidden", items.length > 0);
+
+      items.forEach(item=>{
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "submission-card";
+        const dt = new Date(item.submittedAt);
+        const stamp = isNaN(dt) ? "" : dt.toLocaleString();
+        const inspectedBy = item.details?.find(d=>/inspected by|name/i.test(d.key))?.value || "";
+        btn.innerHTML = `<span class="submission-type"></span><span class="submission-meta"></span>`;
+        btn.querySelector(".submission-type").textContent = item.type;
+        btn.querySelector(".submission-meta").textContent =
+          [inspectedBy, stamp].filter(Boolean).join(" • ");
+        btn.addEventListener("click",()=>showSubmissionDetail(item));
+        mechanicSubmissionList.appendChild(btn);
+      });
+    }catch(err){
+      mechanicSubmissionEmpty.classList.remove("hidden");
+      mechanicSubmissionEmpty.textContent = err.message;
+    }
   }
 
-  function renderMechanicRoster(){
-    if(!currentFleetLocation) return;
-    const mechanics = getMechanics(currentFleetLocation);
-    mechanicList.innerHTML = "";
-    mechanicEmptyState.classList.toggle("hidden", mechanics.length > 0);
+  function showSubmissionDetail(item){
+    currentDetailView = "submissionDetail";
+    mechanicPersonalScreen.classList.add("hidden");
+    mechanicSubmissionDetail.classList.remove("hidden");
+    sheetTitle.textContent = item.type;
 
-    mechanics.forEach(mechanic=>{
-      const item = typeof mechanic === "string" ? {name:mechanic,pinHash:""} : mechanic;
-      const card = document.createElement("button");
-      card.type = "button";
-      card.className = "mechanic-card";
-      card.textContent = item.name;
-      card.addEventListener("click",()=>showMechanicLock(item));
-      mechanicList.appendChild(card);
+    const card = document.createElement("div");
+    card.className = "submission-detail-card";
+    const title = document.createElement("h2");
+    title.textContent = item.type;
+    card.appendChild(title);
+
+    const meta = document.createElement("div");
+    meta.className = "detail-meta";
+    const dt = new Date(item.submittedAt);
+    meta.textContent = `${item.location} • ${isNaN(dt) ? "" : dt.toLocaleString()}`;
+    card.appendChild(meta);
+
+    const section = document.createElement("div");
+    section.className = "submission-detail-section";
+    (item.details || []).forEach(d=>{
+      const row = document.createElement("div");
+      row.className = "submission-detail-row";
+      const k = document.createElement("strong");
+      k.textContent = d.key;
+      const v = document.createElement("span");
+      v.textContent = d.value;
+      row.append(k,v);
+      section.appendChild(row);
     });
+    card.appendChild(section);
+
+    submissionDetailContent.innerHTML = "";
+    submissionDetailContent.appendChild(card);
+    window.scrollTo({top:0,left:0,behavior:"auto"});
   }
 
   function showFleetMechanicsLanding(){
     currentDetailView = "fleetLocations";
+    activeMechanicPin = "";
     currentFleetLocation = null;
     sheetTitle.textContent = "Fleet Mechanics";
     addMechanicBtn.classList.add("hidden");
@@ -411,6 +604,7 @@
 
   function showMechanicRoster(location){
     currentDetailView = "mechanicRoster";
+    activeMechanicPin = "";
     currentFleetLocation = location;
     fleetMechanicsLanding.classList.add("hidden");
     fleetMechanicRoster.classList.add("hidden");
@@ -431,6 +625,7 @@
     currentDetailView = "mechanicLock";
     fleetMechanicRoster.classList.add("hidden");
     mechanicPersonalScreen.classList.add("hidden");
+    mechanicSubmissionDetail.classList.add("hidden");
     mechanicLockScreen.classList.remove("hidden");
     addMechanicBtn.classList.add("hidden");
     sheetTitle.textContent = mechanic.name;
@@ -444,10 +639,12 @@
   function showMechanicPersonalScreen(){
     currentDetailView = "mechanicPersonal";
     mechanicLockScreen.classList.add("hidden");
+    mechanicSubmissionDetail.classList.add("hidden");
     mechanicPersonalScreen.classList.remove("hidden");
     addMechanicBtn.classList.add("hidden");
     sheetTitle.textContent = selectedMechanic.name;
     mechanicPersonalHeading.textContent = selectedMechanic.name;
+    renderSubmissionInbox();
     window.scrollTo({top:0,left:0,behavior:"auto"});
   }
 
@@ -478,6 +675,7 @@
     fleetMechanicRoster.classList.add("hidden");
     mechanicLockScreen.classList.add("hidden");
     mechanicPersonalScreen.classList.add("hidden");
+    mechanicSubmissionDetail.classList.add("hidden");
     mechanicLockScreen.classList.add("hidden");
     mechanicPersonalScreen.classList.add("hidden");
     addMechanicBtn.classList.add("hidden");
@@ -542,7 +740,7 @@
     window.scrollTo(0,0);
   }
 
-  truckForm.addEventListener("submit", (e) => {
+  truckForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const rows = [...truckChecklist.querySelectorAll(".check-row")];
@@ -561,12 +759,18 @@
     }
     if(!truckForm.reportValidity()) return;
 
+    try{
+      await routeSubmissionToLocation(truckForm);
+    }catch(err){
+      alert(`Checkout could not be submitted online. ${err.message}`);
+      return;
+    }
     submitMessage.classList.remove("hidden");
     submitMessage.scrollIntoView({behavior:"smooth",block:"center"});
   });
 
 
-  tractorForm.addEventListener("submit", (e) => {
+  tractorForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const rows = [...tractorChecklist.querySelectorAll(".check-row")];
     const missing = rows.filter(row => !row.dataset.status);
@@ -584,11 +788,17 @@
     }
     if(!tractorForm.reportValidity()) return;
 
+    try{
+      await routeSubmissionToLocation(tractorForm);
+    }catch(err){
+      alert(`Checkout could not be submitted online. ${err.message}`);
+      return;
+    }
     tractorSubmitMessage.classList.remove("hidden");
     tractorSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
   });
 
-  laneForm.addEventListener("submit", (e) => {
+  laneForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const rows=[...laneChecklist.querySelectorAll(".check-row")];
     const missing=rows.filter(row=>!row.dataset.status);
@@ -604,13 +814,19 @@
       return;
     }
     if(!laneForm.reportValidity()) return;
+    try{
+      await routeSubmissionToLocation(laneForm);
+    }catch(err){
+      alert(`Checkout could not be submitted online. ${err.message}`);
+      return;
+    }
     laneSubmitMessage.classList.remove("hidden");
     laneSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
   });
 
   lanePhotos.addEventListener("change",()=>showPhotoNames(lanePhotos,lanePhotoList));
 
-  sweeperForm.addEventListener("submit", (e) => {
+  sweeperForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const rows=[...sweeperChecklist.querySelectorAll(".check-row")];
     const missing=rows.filter(row=>!row.dataset.status);
@@ -624,12 +840,18 @@
       missingDefectNotes[0].querySelector(".defect-note").focus(); return;
     }
     if(!sweeperForm.reportValidity()) return;
+    try{
+      await routeSubmissionToLocation(sweeperForm);
+    }catch(err){
+      alert(`Checkout could not be submitted online. ${err.message}`);
+      return;
+    }
     sweeperSubmitMessage.classList.remove("hidden");
     sweeperSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
   });
   sweeperPhotos.addEventListener("change",()=>showPhotoNames(sweeperPhotos,sweeperPhotoList));
 
-  equipmentForm.addEventListener("submit", (e) => {
+  equipmentForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const rows=[...equipmentChecklist.querySelectorAll(".check-row")];
     const missing=rows.filter(row=>!row.dataset.status);
@@ -643,12 +865,18 @@
       missingDefectNotes[0].querySelector(".defect-note").focus(); return;
     }
     if(!equipmentForm.reportValidity()) return;
+    try{
+      await routeSubmissionToLocation(equipmentForm);
+    }catch(err){
+      alert(`Checkout could not be submitted online. ${err.message}`);
+      return;
+    }
     equipmentSubmitMessage.classList.remove("hidden");
     equipmentSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
   });
   equipmentPhotos.addEventListener("change",()=>showPhotoNames(equipmentPhotos,equipmentPhotoList));
 
-  tmaForm.addEventListener("submit", (e) => {
+  tmaForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const rows = [...tmaChecklist.querySelectorAll(".check-row")];
     const missing = rows.filter(row => !row.dataset.status);
@@ -666,6 +894,12 @@
     }
     if(!tmaForm.reportValidity()) return;
 
+    try{
+      await routeSubmissionToLocation(tmaForm);
+    }catch(err){
+      alert(`Checkout could not be submitted online. ${err.message}`);
+      return;
+    }
     tmaSubmitMessage.classList.remove("hidden");
     tmaSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
   });
@@ -679,7 +913,9 @@
   });
 
   backBtn.addEventListener("click",()=>{
-    if(currentDetailView === "mechanicLock" || currentDetailView === "mechanicPersonal"){
+    if(currentDetailView === "submissionDetail"){
+      showMechanicPersonalScreen();
+    } else if(currentDetailView === "mechanicLock" || currentDetailView === "mechanicPersonal"){
       showMechanicRoster(currentFleetLocation);
     } else if(currentDetailView === "mechanicRoster"){
       showFleetMechanicsLanding();
@@ -745,6 +981,7 @@
     fleetMechanicRoster.classList.add("hidden");
     mechanicLockScreen.classList.add("hidden");
     mechanicPersonalScreen.classList.add("hidden");
+    mechanicSubmissionDetail.classList.add("hidden");
     addMechanicBtn.classList.add("hidden");
     bottomNav.classList.add("hidden");
 
@@ -811,22 +1048,22 @@
       return;
     }
 
-    const mechanics = getMechanics(currentFleetLocation).map(m =>
-      typeof m === "string" ? {name:m,pinHash:""} : m
-    );
-    if(mechanics.some(m=>m.name.toLowerCase()===name.toLowerCase())){
-      mechanicAddError.textContent = "A mechanic with that name already exists at this location.";
+    saveMechanicBtn.disabled = true;
+    try{
+      await createMechanic(currentFleetLocation,name,pin);
+      addMechanicPanel.classList.add("hidden");
+      newMechanicName.value = "";
+      newMechanicPin.value = "";
+      confirmMechanicPin.value = "";
+      await renderMechanicRoster();
+    }catch(err){
+      mechanicAddError.textContent = /duplicate|unique/i.test(err.message)
+        ? "A mechanic with that name already exists at this location."
+        : err.message;
       mechanicAddError.classList.remove("hidden");
-      return;
+    }finally{
+      saveMechanicBtn.disabled = false;
     }
-
-    mechanics.push({name, pinHash: await hashPin(pin)});
-    saveMechanics(currentFleetLocation, mechanics);
-    addMechanicPanel.classList.add("hidden");
-    newMechanicName.value = "";
-    newMechanicPin.value = "";
-    confirmMechanicPin.value = "";
-    renderMechanicRoster();
   });
 
   [newMechanicName,newMechanicPin,confirmMechanicPin].forEach(field=>{
@@ -841,21 +1078,32 @@
   unlockMechanicBtn.addEventListener("click",async()=>{
     if(!selectedMechanic) return;
     mechanicPinError.classList.add("hidden");
+    const enteredPin = mechanicPinEntry.value.trim();
 
-    if(!selectedMechanic.pinHash){
-      mechanicPinError.textContent = "This mechanic does not have a PIN yet.";
+    if(!/^\d{4,6}$/.test(enteredPin)){
+      mechanicPinError.textContent = "Enter your 4–6 digit PIN.";
       mechanicPinError.classList.remove("hidden");
+      mechanicPinEntry.focus();
       return;
     }
 
-    const enteredHash = await hashPin(mechanicPinEntry.value.trim());
-    if(enteredHash !== selectedMechanic.pinHash){
-      mechanicPinError.textContent = "Incorrect PIN. Try again.";
+    unlockMechanicBtn.disabled = true;
+    try{
+      const verified = await verifyMechanicPin(selectedMechanic.id,enteredPin);
+      if(!verified){
+        mechanicPinError.textContent = "Incorrect PIN. Try again.";
+        mechanicPinError.classList.remove("hidden");
+        mechanicPinEntry.select();
+        return;
+      }
+      activeMechanicPin = enteredPin;
+      showMechanicPersonalScreen();
+    }catch(err){
+      mechanicPinError.textContent = err.message;
       mechanicPinError.classList.remove("hidden");
-      mechanicPinEntry.select();
-      return;
+    }finally{
+      unlockMechanicBtn.disabled = false;
     }
-    showMechanicPersonalScreen();
   });
 
   mechanicPinEntry.addEventListener("keydown",(e)=>{

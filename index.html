@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#118a45" />
   <title>Illinois Tollway Checkout</title>
-  <link rel="stylesheet" href="styles.css?v=29" />
+  <link rel="stylesheet" href="styles.css?v=31" />
 </head>
 <body>
   <main id="app">
@@ -128,7 +128,17 @@
       <div id="mechanicPersonalScreen" class="hidden">
         <div class="content-wrap fleet-mechanics-wrap">
           <p id="mechanicPersonalHeading" class="intro">Mechanic</p>
-          <div class="mechanic-empty-state">This mechanic's personal landing page will be built here next.</div>
+          <p id="mechanicInboxLocation" class="mechanic-inbox-location"></p>
+          <div id="mechanicSubmissionEmpty" class="mechanic-empty-state">
+            No submitted checkout sheets are waiting for this location.
+          </div>
+          <div id="mechanicSubmissionList" class="submission-list"></div>
+        </div>
+      </div>
+
+      <div id="mechanicSubmissionDetail" class="hidden">
+        <div class="content-wrap fleet-mechanics-wrap">
+          <div id="submissionDetailContent"></div>
         </div>
       </div>
 
@@ -490,6 +500,7 @@
     </section>
 </main>
 
-  <script src="app.js?v=29"></script>
+  <script src="config.js?v=1"></script>
+  <script src="app.js?v=31"></script>
 </body>
 </html>

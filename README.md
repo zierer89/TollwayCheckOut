@@ -165,3 +165,22 @@ v25 Mechanic Lock Page:
 - Incorrect PIN keeps the page locked.
 - PINs are stored as SHA-256 hashes in local device/browser storage rather than plain text.
 - Back from the lock/personal page returns to that location's mechanic roster.
+
+v26 Location-Based Submission Inbox:
+- Each implemented checkout/inspection form now routes a submitted sheet to the Fleet Mechanics queue matching the Location selected by the employee.
+- After a mechanic unlocks their personal page, they can only view submitted checkout sheets for that mechanic's work location.
+- The mechanic personal page is now a submission inbox, not a general-purpose dashboard.
+- Tapping a submitted sheet opens its captured form details.
+- Current implementation stores submissions in browser/device local storage. This proves the routing and UI flow on one device/browser; cross-device delivery from employee iPads/phones to mechanic iPads requires the planned shared backend/Microsoft 365 integration.
+
+v27 Shared Online Backend:
+- Replaced device-only localStorage routing for mechanic rosters and submitted checkout sheets with a shared Supabase backend.
+- Employee checkout submissions are saved online and routed by the selected Location.
+- Fleet Mechanics rosters are shared across devices.
+- A mechanic enters their PIN inside the app; the database verifies it server-side.
+- After unlock, the mechanic sees only submitted checkout sheets for that mechanic's work location.
+- No email delivery is required.
+- PIN hashes remain on the database server and are never returned to the browser.
+- Added config.js and supabase-schema.sql.
+- Truck Checkout routing was also corrected so it now follows the same online location-routing flow as the other implemented forms.
+- Photo file uploads are not yet sent to the online backend; the form data and checklist results are shared now.

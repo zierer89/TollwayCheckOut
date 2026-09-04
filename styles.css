@@ -550,3 +550,73 @@ textarea{min-height:120px;resize:vertical}
   width:100%;
   margin-top:16px;
 }
+
+/* v26: mechanic submitted checkout inbox */
+.mechanic-inbox-location{
+  text-align:center;
+  font-weight:800;
+  margin:-4px 0 18px;
+  color:#555;
+}
+.submission-list{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+}
+.submission-card{
+  width:100%;
+  border:0;
+  border-radius:18px;
+  background:#118a45;
+  color:#fff;
+  text-align:left;
+  padding:18px 20px;
+  cursor:pointer;
+  font:inherit;
+}
+.submission-card .submission-type{
+  display:block;
+  font-size:1.1rem;
+  font-weight:800;
+  margin-bottom:5px;
+}
+.submission-card .submission-meta{
+  display:block;
+  font-size:.93rem;
+  line-height:1.4;
+  opacity:.95;
+}
+.submission-detail-card{
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 4px 18px rgba(0,0,0,.10);
+  padding:20px;
+}
+.submission-detail-card h2{
+  margin:0 0 8px;
+}
+.submission-detail-card .detail-meta{
+  margin-bottom:18px;
+  color:#555;
+  font-weight:700;
+}
+.submission-detail-section{
+  border-top:1px solid #ddd;
+  padding-top:14px;
+  margin-top:14px;
+}
+.submission-detail-row{
+  display:grid;
+  grid-template-columns:minmax(120px, 42%) 1fr;
+  gap:12px;
+  padding:7px 0;
+}
+.submission-detail-row strong{
+  word-break:break-word;
+}
+.submission-detail-row span{
+  word-break:break-word;
+}
+@media(max-width:680px){
+  .submission-detail-row{grid-template-columns:1fr;}
+}
