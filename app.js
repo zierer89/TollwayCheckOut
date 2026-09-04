@@ -699,30 +699,35 @@
     return {submissionId,photoError};
   }
 
-  function finishSuccessfulSubmission(form,messageEl){
-    const submitBtn=form.querySelector('button[type="submit"]');
-    if(submitBtn) submitBtn.disabled=true;
-    messageEl.textContent="Completed";
-    messageEl.classList.remove("hidden");
-    messageEl.scrollIntoView({behavior:"smooth",block:"center"});
+    function finishSuccessfulSubmission(form,messageEl){
+    // Show the completion confirmation immediately and keep it visible
+    // long enough to be noticed before returning to the main landing page.
+    if(messageEl){
+      messageEl.textContent="Completed";
+      messageEl.classList.remove("hidden");
+    }
 
+    // Prevent another submit while the completion state is on screen.
+    const submitButton=form.querySelector('button[type="submit"], .submit-btn');
+    if(submitButton) submitButton.disabled=true;
+
+    // Reset the form after the user has had a chance to see "Completed".
     setTimeout(()=>{
-      form.reset();
-      form.querySelectorAll(".check-row").forEach(row=>{
-        delete row.dataset.status;
-        row.querySelectorAll(".status-btn").forEach(btn=>btn.classList.remove("selected"));
-        const note=row.querySelector(".defect-note");
-        if(note){
-          note.classList.remove("visible");
-          note.required=false;
-          note.value="";
-        }
-      });
-      form.querySelectorAll(".photo-list").forEach(list=>list.innerHTML="");
-      messageEl.classList.add("hidden");
-      if(submitBtn) submitBtn.disabled=false;
+      try{
+        form.reset();
+        form.querySelectorAll(".defect-comment, .defect-details, .conditional-comment").forEach(el=>{
+          if(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) el.value="";
+          el.classList.add("hidden");
+        });
+        form.querySelectorAll(".photo-list").forEach(el=>el.innerHTML="");
+      }catch(_){}
+
+      if(messageEl) messageEl.classList.add("hidden");
+      if(submitButton) submitButton.disabled=false;
+
+      // Always return to the true main Checkout Sheets landing screen.
       showHome();
-    },2200);
+    },2000);
   }
 
   const LOCAL_MECHANICS_KEY = "tollway_mock_mechanics_v39";
