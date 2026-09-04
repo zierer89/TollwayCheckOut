@@ -34,11 +34,32 @@
   const changePinError = document.getElementById("changePinError");
   const saveChangedPinBtn = document.getElementById("saveChangedPinBtn");
   const deleteMechanicBtn = document.getElementById("deleteMechanicBtn");
-  const dmArea=document.getElementById("districtManagerArea"), dmRosterView=document.getElementById("dmRosterView"), dmRoster=document.getElementById("dmRoster"), dmAddPanel=document.getElementById("dmAddPanel");
-  const dmName=document.getElementById("dmName"), dmPassword=document.getElementById("dmPassword"), dmConfirmPassword=document.getElementById("dmConfirmPassword"), dmAddError=document.getElementById("dmAddError");
-  const dmCancelAdd=document.getElementById("dmCancelAdd"), dmSaveAdd=document.getElementById("dmSaveAdd"), dmLockView=document.getElementById("dmLockView"), dmLockName=document.getElementById("dmLockName"), dmUnlockPassword=document.getElementById("dmUnlockPassword"), dmLockError=document.getElementById("dmLockError"), dmUnlockBtn=document.getElementById("dmUnlockBtn");
-  const dmPersonalView=document.getElementById("dmPersonalView"), dmPersonalName=document.getElementById("dmPersonalName"), dmSettings=document.getElementById("dmSettings"), dmNewName=document.getElementById("dmNewName"), dmSaveName=document.getElementById("dmSaveName"), dmNewPassword=document.getElementById("dmNewPassword"), dmConfirmNewPassword=document.getElementById("dmConfirmNewPassword"), dmSettingsError=document.getElementById("dmSettingsError"), dmSavePassword=document.getElementById("dmSavePassword"), dmDelete=document.getElementById("dmDelete");
-
+  const districtManagerRoster = document.getElementById("districtManagerRoster");
+  const districtManagerRosterIntro = document.getElementById("districtManagerRosterIntro");
+  const addDistrictManagerPanel = document.getElementById("addDistrictManagerPanel");
+  const newDistrictManagerName = document.getElementById("newDistrictManagerName");
+  const newDistrictManagerPassword = document.getElementById("newDistrictManagerPassword");
+  const confirmDistrictManagerPassword = document.getElementById("confirmDistrictManagerPassword");
+  const districtManagerAddError = document.getElementById("districtManagerAddError");
+  const saveDistrictManagerBtn = document.getElementById("saveDistrictManagerBtn");
+  const cancelDistrictManagerBtn = document.getElementById("cancelDistrictManagerBtn");
+  const districtManagerEmptyState = document.getElementById("districtManagerEmptyState");
+  const districtManagerList = document.getElementById("districtManagerList");
+  const districtManagerLockScreen = document.getElementById("districtManagerLockScreen");
+  const districtManagerLockName = document.getElementById("districtManagerLockName");
+  const districtManagerPasswordEntry = document.getElementById("districtManagerPasswordEntry");
+  const districtManagerPasswordError = document.getElementById("districtManagerPasswordError");
+  const unlockDistrictManagerBtn = document.getElementById("unlockDistrictManagerBtn");
+  const districtManagerPersonalScreen = document.getElementById("districtManagerPersonalScreen");
+  const districtManagerPersonalHeading = document.getElementById("districtManagerPersonalHeading");
+  const districtManagerSettingsPanel = document.getElementById("districtManagerSettingsPanel");
+  const changeDistrictManagerName = document.getElementById("changeDistrictManagerName");
+  const saveDistrictManagerNameBtn = document.getElementById("saveDistrictManagerNameBtn");
+  const changeDistrictManagerPassword = document.getElementById("changeDistrictManagerPassword");
+  const confirmChangeDistrictManagerPassword = document.getElementById("confirmChangeDistrictManagerPassword");
+  const districtManagerSettingsError = document.getElementById("districtManagerSettingsError");
+  const saveDistrictManagerPasswordBtn = document.getElementById("saveDistrictManagerPasswordBtn");
+  const deleteDistrictManagerBtn = document.getElementById("deleteDistrictManagerBtn");
   const mechanicInboxLocation = document.getElementById("mechanicInboxLocation");
   const mechanicSubmissionEmpty = document.getElementById("mechanicSubmissionEmpty");
   const mechanicSubmissionList = document.getElementById("mechanicSubmissionList");
@@ -375,7 +396,8 @@
   let currentDetailView = "home";
 
   let activeMechanicPin = "";
-  let activeDM=null, activeDMPassword="";
+  let selectedDistrictManager = null;
+  let activeDistrictManagerPassword = "";
 
   function backendConfig(){
     const cfg = window.TOLLWAY_BACKEND || {};
@@ -526,6 +548,31 @@
       p_mechanic_id:mechanicId,
       p_current_pin:currentPin
     });
+  }
+
+  async function getDistrictManagers(){
+    const rows = await backendRpc("list_fleet_district_managers",{});
+    return Array.isArray(rows) ? rows : [];
+  }
+
+  async function createDistrictManager(name,password){
+    return backendRpc("create_fleet_district_manager",{p_name:name,p_password:password});
+  }
+
+  async function verifyDistrictManagerPassword(managerId,password){
+    return backendRpc("verify_fleet_district_manager_password",{p_manager_id:managerId,p_password:password});
+  }
+
+  async function updateDistrictManagerName(managerId,password,newName){
+    return backendRpc("update_fleet_district_manager_name",{p_manager_id:managerId,p_password:password,p_new_name:newName});
+  }
+
+  async function changeDistrictManagerPasswordOnline(managerId,currentPassword,newPassword){
+    return backendRpc("change_fleet_district_manager_password",{p_manager_id:managerId,p_current_password:currentPassword,p_new_password:newPassword});
+  }
+
+  async function deleteDistrictManagerOnline(managerId,password){
+    return backendRpc("delete_fleet_district_manager",{p_manager_id:managerId,p_password:password});
   }
 
 
@@ -686,6 +733,7 @@
   }
 
   function showFleetMechanicsLanding(){
+    hideDistrictManagerViews();
     currentDetailView = "fleetLocations";
     activeMechanicPin = "";
     mechanicSettingsBtn.classList.add("hidden");
@@ -701,6 +749,7 @@
   }
 
   function showMechanicRoster(location){
+    hideDistrictManagerViews();
     currentDetailView = "mechanicRoster";
     activeMechanicPin = "";
     mechanicSettingsBtn.classList.add("hidden");
@@ -720,6 +769,7 @@
   }
 
   function showMechanicLock(mechanic){
+    hideDistrictManagerViews();
     selectedMechanic = mechanic;
     mechanicSettingsBtn.classList.add("hidden");
     currentDetailView = "mechanicLock";
@@ -737,6 +787,7 @@
   }
 
   function showMechanicPersonalScreen(){
+    hideDistrictManagerViews();
     currentDetailView = "mechanicPersonal";
     mechanicLockScreen.classList.add("hidden");
     mechanicSubmissionDetail.classList.add("hidden");
@@ -754,6 +805,7 @@
   }
 
   function showHome(){
+    hideDistrictManagerViews();
     mechanicSettingsBtn.classList.add("hidden");
     splash.classList.add("hidden");
     sheet.classList.add("hidden");
@@ -766,6 +818,7 @@
   }
 
   function showSheet(key){
+    hideDistrictManagerViews();
     mechanicSettingsBtn.classList.add("hidden");
     const item=sheets[key];
     if(!item)return;
@@ -1023,7 +1076,9 @@
     if(currentDetailView === "submissionDetail"){
       showMechanicPersonalScreen();
     } else if(currentDetailView === "districtManagerLock" || currentDetailView === "districtManagerPersonal"){
-      showDMRoster();
+      showDistrictManagerRoster();
+    } else if(currentDetailView === "districtManagerRoster"){
+      showHome();
     } else if(currentDetailView === "mechanicLock" || currentDetailView === "mechanicPersonal"){
       showMechanicRoster(currentFleetLocation);
     } else if(currentDetailView === "mechanicRoster"){
@@ -1070,26 +1125,101 @@
     if(!e.target.closest(".main-fleet-menu")) closeMainFleetMenu();
   });
 
-  async function dmRpc(name,args={}){ return backendRpc(name,args); }
-  async function renderDMRoster(){
-    dmRoster.innerHTML="";
+  function hideDistrictManagerViews(){
+    districtManagerRoster.classList.add("hidden");
+    districtManagerLockScreen.classList.add("hidden");
+    districtManagerPersonalScreen.classList.add("hidden");
+    addDistrictManagerPanel.classList.add("hidden");
+  }
+
+  async function renderDistrictManagerRoster(){
+    districtManagerList.innerHTML = "";
     try{
-      const rows=await dmRpc("list_fleet_district_managers");
-      if(!rows.length){ const p=document.createElement("p"); p.className="empty-state"; p.textContent="No district managers have been added yet."; dmRoster.appendChild(p); return; }
-      rows.forEach(m=>{ const b=document.createElement("button"); b.type="button"; b.className="checkout-card district-manager-card"; b.textContent=m.name; b.onclick=()=>showDMLock(m); dmRoster.appendChild(b); });
-    }catch(e){ const p=document.createElement("p"); p.className="form-error"; p.textContent=e.message; dmRoster.appendChild(p); }
+      const managers = await getDistrictManagers();
+      districtManagerEmptyState.classList.toggle("hidden", managers.length > 0);
+      districtManagerEmptyState.textContent = "No district managers have been added yet.";
+
+      managers.forEach(manager=>{
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "mechanic-card";
+        card.textContent = manager.name;
+        card.addEventListener("click",()=>showDistrictManagerLock(manager));
+        districtManagerList.appendChild(card);
+      });
+    }catch(err){
+      districtManagerEmptyState.classList.remove("hidden");
+      districtManagerEmptyState.textContent = err.message;
+    }
   }
-  function showDMRoster(){
-    currentDetailView="districtManagers"; activeDM=null; activeDMPassword="";
-    utilityPageContent.classList.add("hidden"); fleetMechanicsLanding.classList.add("hidden"); fleetMechanicRoster.classList.add("hidden"); mechanicLockScreen.classList.add("hidden"); mechanicPersonalScreen.classList.add("hidden"); mechanicSubmissionDetail.classList.add("hidden");
-    dmArea.classList.remove("hidden"); dmRosterView.classList.remove("hidden"); dmLockView.classList.add("hidden"); dmPersonalView.classList.add("hidden"); dmAddPanel.classList.add("hidden");
-    addMechanicBtn.classList.remove("hidden"); addMechanicBtn.setAttribute("aria-label","Add district manager"); mechanicSettingsBtn.classList.add("hidden"); sheetTitle.textContent="Fleet District Managers"; bottomNav.classList.add("hidden"); renderDMRoster(); window.scrollTo(0,0);
+
+  function showDistrictManagerRoster(){
+    currentDetailView = "districtManagerRoster";
+    selectedDistrictManager = null;
+    activeDistrictManagerPassword = "";
+    currentFleetLocation = null;
+
+    fleetMechanicsLanding.classList.add("hidden");
+    fleetMechanicRoster.classList.add("hidden");
+    mechanicLockScreen.classList.add("hidden");
+    mechanicPersonalScreen.classList.add("hidden");
+    mechanicSubmissionDetail.classList.add("hidden");
+    utilityPageContent.classList.add("hidden");
+    placeholderContent.classList.add("hidden");
+
+    districtManagerLockScreen.classList.add("hidden");
+    districtManagerPersonalScreen.classList.add("hidden");
+    districtManagerRoster.classList.remove("hidden");
+    addDistrictManagerPanel.classList.add("hidden");
+
+    addMechanicBtn.classList.remove("hidden");
+    mechanicSettingsBtn.classList.add("hidden");
+    sheetTitle.textContent = "Fleet District Managers";
+    districtManagerRosterIntro.textContent = "Fleet District Managers";
+    bottomNav.classList.add("hidden");
+
+    renderDistrictManagerRoster();
+    window.scrollTo({top:0,left:0,behavior:"auto"});
   }
-  function showDMLock(m){
-    activeDM=m; currentDetailView="districtManagerLock"; dmRosterView.classList.add("hidden"); dmPersonalView.classList.add("hidden"); dmLockView.classList.remove("hidden"); addMechanicBtn.classList.add("hidden"); mechanicSettingsBtn.classList.add("hidden"); sheetTitle.textContent=m.name; dmLockName.textContent=m.name; dmUnlockPassword.value=""; dmLockError.classList.add("hidden"); window.scrollTo(0,0);
+
+  function showDistrictManagerLock(manager){
+    selectedDistrictManager = manager;
+    activeDistrictManagerPassword = "";
+    currentDetailView = "districtManagerLock";
+
+    districtManagerRoster.classList.add("hidden");
+    districtManagerPersonalScreen.classList.add("hidden");
+    districtManagerLockScreen.classList.remove("hidden");
+
+    addMechanicBtn.classList.add("hidden");
+    mechanicSettingsBtn.classList.add("hidden");
+    sheetTitle.textContent = manager.name;
+    districtManagerLockName.textContent = manager.name;
+    districtManagerPasswordEntry.value = "";
+    districtManagerPasswordError.classList.add("hidden");
+
+    setTimeout(()=>districtManagerPasswordEntry.focus(),50);
+    window.scrollTo({top:0,left:0,behavior:"auto"});
   }
-  function showDMPersonal(){
-    currentDetailView="districtManagerPersonal"; dmLockView.classList.add("hidden"); dmRosterView.classList.add("hidden"); dmPersonalView.classList.remove("hidden"); addMechanicBtn.classList.add("hidden"); mechanicSettingsBtn.classList.remove("hidden"); dmSettings.classList.add("hidden"); sheetTitle.textContent=activeDM.name; dmPersonalName.textContent=activeDM.name; dmNewName.value=activeDM.name; window.scrollTo(0,0);
+
+  function showDistrictManagerPersonalScreen(){
+    currentDetailView = "districtManagerPersonal";
+    districtManagerLockScreen.classList.add("hidden");
+    districtManagerRoster.classList.add("hidden");
+    districtManagerPersonalScreen.classList.remove("hidden");
+
+    addMechanicBtn.classList.add("hidden");
+    mechanicSettingsBtn.classList.remove("hidden");
+    districtManagerSettingsPanel.classList.add("hidden");
+
+    sheetTitle.textContent = selectedDistrictManager.name;
+    districtManagerPersonalHeading.textContent = selectedDistrictManager.name;
+    changeDistrictManagerName.value = selectedDistrictManager.name;
+    changeDistrictManagerPassword.value = "";
+    confirmChangeDistrictManagerPassword.value = "";
+    districtManagerSettingsError.classList.add("hidden");
+
+    window.scrollTo({top:0,left:0,behavior:"auto"});
   }
 
   function showUtilityPage(page){
@@ -1114,6 +1244,7 @@
     mechanicLockScreen.classList.add("hidden");
     mechanicPersonalScreen.classList.add("hidden");
     mechanicSubmissionDetail.classList.add("hidden");
+    hideDistrictManagerViews();
     addMechanicBtn.classList.add("hidden");
     bottomNav.classList.add("hidden");
 
@@ -1126,7 +1257,7 @@
     } else if(page === "mechanics"){
       showFleetMechanicsLanding();
     } else if(page === "managers"){
-      showDMRoster();
+      showDistrictManagerRoster();
       return;
     }
 
@@ -1138,9 +1269,18 @@
   });
 
   mechanicSettingsBtn.addEventListener("click",()=>{
-    if(currentDetailView==="districtManagerPersonal"){ dmSettings.classList.toggle("hidden"); return; }
+    if(currentDetailView === "districtManagerPersonal"){
+      districtManagerSettingsPanel.classList.toggle("hidden");
+      if(!districtManagerSettingsPanel.classList.contains("hidden")){
+        window.scrollTo({top:0,left:0,behavior:"smooth"});
+      }
+      return;
+    }
+
     mechanicSettingsPanel.classList.toggle("hidden");
-    if(!mechanicSettingsPanel.classList.contains("hidden")) window.scrollTo({top:0,left:0,behavior:"smooth"});
+    if(!mechanicSettingsPanel.classList.contains("hidden")){
+      window.scrollTo({top:0,left:0,behavior:"smooth"});
+    }
   });
 
   saveChangedPinBtn.addEventListener("click",async()=>{
@@ -1198,19 +1338,166 @@
     }
   });
 
-  dmCancelAdd.onclick=()=>dmAddPanel.classList.add("hidden");
-  dmSaveAdd.onclick=async()=>{ const n=dmName.value.trim(),p=dmPassword.value,c=dmConfirmPassword.value; dmAddError.classList.add("hidden");
-    if(!n||p.length<4||p!==c){dmAddError.textContent=!n?"Manager name is required.":p.length<4?"Password must be at least 4 characters.":"Passwords do not match.";dmAddError.classList.remove("hidden");return;}
-    try{await dmRpc("create_fleet_district_manager",{p_name:n,p_password:p});dmAddPanel.classList.add("hidden");await renderDMRoster();}catch(e){dmAddError.textContent=e.message;dmAddError.classList.remove("hidden");}};
-  dmUnlockBtn.onclick=async()=>{const p=dmUnlockPassword.value;dmLockError.classList.add("hidden");try{const ok=await dmRpc("verify_fleet_district_manager_password",{p_manager_id:activeDM.id,p_password:p});if(ok!==true){dmLockError.textContent="Incorrect password.";dmLockError.classList.remove("hidden");return;}activeDMPassword=p;showDMPersonal();}catch(e){dmLockError.textContent=e.message;dmLockError.classList.remove("hidden");}};
-  dmSaveName.onclick=async()=>{const n=dmNewName.value.trim();try{await dmRpc("update_fleet_district_manager_name",{p_manager_id:activeDM.id,p_password:activeDMPassword,p_new_name:n});activeDM.name=n;sheetTitle.textContent=n;dmPersonalName.textContent=n;alert("Manager name changed successfully.");}catch(e){dmSettingsError.textContent=e.message;dmSettingsError.classList.remove("hidden");}};
-  dmSavePassword.onclick=async()=>{const p=dmNewPassword.value,c=dmConfirmNewPassword.value;dmSettingsError.classList.add("hidden");if(p.length<4||p!==c){dmSettingsError.textContent=p.length<4?"Password must be at least 4 characters.":"Passwords do not match.";dmSettingsError.classList.remove("hidden");return;}try{await dmRpc("change_fleet_district_manager_password",{p_manager_id:activeDM.id,p_current_password:activeDMPassword,p_new_password:p});activeDMPassword=p;dmNewPassword.value="";dmConfirmNewPassword.value="";alert("Password changed successfully.");}catch(e){dmSettingsError.textContent=e.message;dmSettingsError.classList.remove("hidden");}};
-  dmDelete.onclick=async()=>{if(!confirm(`Delete ${activeDM.name}'s district manager profile? This cannot be undone.`))return;try{await dmRpc("delete_fleet_district_manager",{p_manager_id:activeDM.id,p_password:activeDMPassword});showDMRoster();}catch(e){alert(e.message);}};
+  cancelDistrictManagerBtn.addEventListener("click",()=>{
+    addDistrictManagerPanel.classList.add("hidden");
+    districtManagerAddError.classList.add("hidden");
+    newDistrictManagerName.value = "";
+    newDistrictManagerPassword.value = "";
+    confirmDistrictManagerPassword.value = "";
+  });
+
+  saveDistrictManagerBtn.addEventListener("click",async()=>{
+    const name = newDistrictManagerName.value.trim();
+    const password = newDistrictManagerPassword.value;
+    const confirmPassword = confirmDistrictManagerPassword.value;
+    districtManagerAddError.classList.add("hidden");
+
+    if(!name){
+      districtManagerAddError.textContent = "Enter the district manager's name.";
+      districtManagerAddError.classList.remove("hidden");
+      newDistrictManagerName.focus();
+      return;
+    }
+
+    if(password.length < 4){
+      districtManagerAddError.textContent = "Password must be at least 4 characters.";
+      districtManagerAddError.classList.remove("hidden");
+      newDistrictManagerPassword.focus();
+      return;
+    }
+
+    if(password !== confirmPassword){
+      districtManagerAddError.textContent = "Passwords do not match.";
+      districtManagerAddError.classList.remove("hidden");
+      confirmDistrictManagerPassword.focus();
+      return;
+    }
+
+    saveDistrictManagerBtn.disabled = true;
+    try{
+      await createDistrictManager(name,password);
+      addDistrictManagerPanel.classList.add("hidden");
+      await renderDistrictManagerRoster();
+    }catch(err){
+      districtManagerAddError.textContent = /duplicate|unique/i.test(err.message)
+        ? "A district manager with that name already exists."
+        : err.message;
+      districtManagerAddError.classList.remove("hidden");
+    }finally{
+      saveDistrictManagerBtn.disabled = false;
+    }
+  });
+
+  unlockDistrictManagerBtn.addEventListener("click",async()=>{
+    if(!selectedDistrictManager) return;
+
+    const password = districtManagerPasswordEntry.value;
+    districtManagerPasswordError.classList.add("hidden");
+    unlockDistrictManagerBtn.disabled = true;
+
+    try{
+      const valid = await verifyDistrictManagerPassword(selectedDistrictManager.id,password);
+      if(valid !== true){
+        districtManagerPasswordError.textContent = "Incorrect password. Try again.";
+        districtManagerPasswordError.classList.remove("hidden");
+        return;
+      }
+
+      activeDistrictManagerPassword = password;
+      showDistrictManagerPersonalScreen();
+    }catch(err){
+      districtManagerPasswordError.textContent = err.message;
+      districtManagerPasswordError.classList.remove("hidden");
+    }finally{
+      unlockDistrictManagerBtn.disabled = false;
+    }
+  });
+
+  saveDistrictManagerNameBtn.addEventListener("click",async()=>{
+    const newName = changeDistrictManagerName.value.trim();
+    districtManagerSettingsError.classList.add("hidden");
+
+    if(!newName){
+      districtManagerSettingsError.textContent = "Enter a district manager name.";
+      districtManagerSettingsError.classList.remove("hidden");
+      return;
+    }
+
+    try{
+      await updateDistrictManagerName(selectedDistrictManager.id,activeDistrictManagerPassword,newName);
+      selectedDistrictManager.name = newName;
+      sheetTitle.textContent = newName;
+      districtManagerPersonalHeading.textContent = newName;
+      alert("District manager name changed successfully.");
+    }catch(err){
+      districtManagerSettingsError.textContent = err.message;
+      districtManagerSettingsError.classList.remove("hidden");
+    }
+  });
+
+  saveDistrictManagerPasswordBtn.addEventListener("click",async()=>{
+    const newPassword = changeDistrictManagerPassword.value;
+    const confirmPassword = confirmChangeDistrictManagerPassword.value;
+    districtManagerSettingsError.classList.add("hidden");
+
+    if(newPassword.length < 4){
+      districtManagerSettingsError.textContent = "Password must be at least 4 characters.";
+      districtManagerSettingsError.classList.remove("hidden");
+      return;
+    }
+
+    if(newPassword !== confirmPassword){
+      districtManagerSettingsError.textContent = "Passwords do not match.";
+      districtManagerSettingsError.classList.remove("hidden");
+      return;
+    }
+
+    try{
+      await changeDistrictManagerPasswordOnline(
+        selectedDistrictManager.id,
+        activeDistrictManagerPassword,
+        newPassword
+      );
+      activeDistrictManagerPassword = newPassword;
+      changeDistrictManagerPassword.value = "";
+      confirmChangeDistrictManagerPassword.value = "";
+      alert("Password changed successfully.");
+    }catch(err){
+      districtManagerSettingsError.textContent = err.message;
+      districtManagerSettingsError.classList.remove("hidden");
+    }
+  });
+
+  deleteDistrictManagerBtn.addEventListener("click",async()=>{
+    if(!selectedDistrictManager || !activeDistrictManagerPassword) return;
+
+    const confirmed = confirm(`Delete ${selectedDistrictManager.name}'s district manager profile? This cannot be undone.`);
+    if(!confirmed) return;
+
+    deleteDistrictManagerBtn.disabled = true;
+    try{
+      await deleteDistrictManagerOnline(selectedDistrictManager.id,activeDistrictManagerPassword);
+      selectedDistrictManager = null;
+      activeDistrictManagerPassword = "";
+      showDistrictManagerRoster();
+    }catch(err){
+      alert(err.message);
+    }finally{
+      deleteDistrictManagerBtn.disabled = false;
+    }
+  });
 
   addMechanicBtn.addEventListener("click",()=>{
-    if(currentDetailView==="districtManagers"){
-      dmAddError.classList.add("hidden"); dmName.value=""; dmPassword.value=""; dmConfirmPassword.value=""; dmAddPanel.classList.remove("hidden"); dmName.focus(); return;
+    if(currentDetailView === "districtManagerRoster"){
+      districtManagerAddError.classList.add("hidden");
+      newDistrictManagerName.value = "";
+      newDistrictManagerPassword.value = "";
+      confirmDistrictManagerPassword.value = "";
+      addDistrictManagerPanel.classList.remove("hidden");
+      newDistrictManagerName.focus();
+      return;
     }
+
     if(!currentFleetLocation) return;
     mechanicAddError.classList.add("hidden");
     newMechanicName.value = "";

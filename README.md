@@ -207,9 +207,9 @@ v30 Fleet District Managers:
 - Exact order: Ted Zubek, Pete Manschula, Mark Fera, Brad Harris.
 - Selecting a manager opens that manager's own landing page.
 
-v31 District Manager Profiles:
-- Fleet District Managers starts empty.
-- + creates a manager using name/password/confirmation.
-- Manager cards are selectable and password locked.
-- Unlocked manager pages include settings to change name, change password, or delete profile.
-- Profiles/password hashes are stored through the shared Supabase backend.
+v32 District Manager Mapping Fix:
+- Fleet District Managers now uses the exact same roster/add-panel layout classes as Fleet Mechanics.
+- The + button opens the Add District Manager panel only while viewing the Fleet District Managers roster.
+- District Manager views are forcibly hidden when entering Fleet Mechanics, any garage roster, mechanic lock/profile pages, the main home page, checkout forms, Settings, or About.
+- Manager cards are no longer hard-coded.
+- Manager profiles use Supabase and include password lock, rename, password change, and delete.

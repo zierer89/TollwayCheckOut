@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#118a45" />
   <title>Illinois Tollway Checkout</title>
-  <link rel="stylesheet" href="styles.css?v=35" />
+  <link rel="stylesheet" href="styles.css?v=37" />
 </head>
 <body>
   <main id="app">
@@ -120,6 +120,89 @@
         </div>
       </div>
 
+      <div id="districtManagerRoster" class="hidden">
+        <div class="content-wrap fleet-mechanics-wrap">
+          <p id="districtManagerRosterIntro" class="intro">Fleet District Managers</p>
+
+          <div id="addDistrictManagerPanel" class="mechanic-add-panel hidden">
+            <label for="newDistrictManagerName">District Manager Name</label>
+            <input id="newDistrictManagerName" type="text" autocomplete="off" placeholder="Enter district manager name" />
+
+            <label for="newDistrictManagerPassword">Create Password</label>
+            <input id="newDistrictManagerPassword" type="password" autocomplete="new-password" placeholder="Enter password" />
+
+            <label for="confirmDistrictManagerPassword">Confirm Password</label>
+            <input id="confirmDistrictManagerPassword" type="password" autocomplete="new-password" placeholder="Re-enter password" />
+
+            <p id="districtManagerAddError" class="form-error hidden"></p>
+
+            <div class="mechanic-add-actions">
+              <button id="saveDistrictManagerBtn" class="submit-btn" type="button">Add District Manager</button>
+              <button id="cancelDistrictManagerBtn" class="secondary-btn" type="button">Cancel</button>
+            </div>
+          </div>
+
+          <div id="districtManagerEmptyState" class="mechanic-empty-state">
+            No district managers have been added yet.
+          </div>
+
+          <div id="districtManagerList" class="checkout-list mechanic-list"></div>
+        </div>
+      </div>
+
+      <div id="districtManagerLockScreen" class="hidden">
+        <div class="content-wrap mechanic-lock-wrap">
+          <div class="mechanic-lock-card">
+            <div class="lock-symbol">🔒</div>
+            <h2 id="districtManagerLockName">District Manager</h2>
+            <p>Enter your password to continue.</p>
+            <label for="districtManagerPasswordEntry">Password</label>
+            <input id="districtManagerPasswordEntry" type="password" autocomplete="off" placeholder="Enter password" />
+            <p id="districtManagerPasswordError" class="form-error hidden">Incorrect password. Try again.</p>
+            <button id="unlockDistrictManagerBtn" class="submit-btn" type="button">Unlock</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="districtManagerPersonalScreen" class="hidden">
+        <div class="content-wrap fleet-mechanics-wrap">
+          <p id="districtManagerPersonalHeading" class="intro">District Manager</p>
+
+          <div id="districtManagerSettingsPanel" class="mechanic-settings-panel hidden">
+            <h2>District Manager Settings</h2>
+
+            <div class="mechanic-settings-section">
+              <h3>Change Name</h3>
+              <label for="changeDistrictManagerName">District Manager Name</label>
+              <input id="changeDistrictManagerName" type="text" autocomplete="off" />
+              <button id="saveDistrictManagerNameBtn" class="submit-btn" type="button">Change Name</button>
+            </div>
+
+            <div class="mechanic-settings-section">
+              <h3>Change Password</h3>
+              <label for="changeDistrictManagerPassword">New Password</label>
+              <input id="changeDistrictManagerPassword" type="password" autocomplete="new-password" placeholder="Enter new password" />
+
+              <label for="confirmChangeDistrictManagerPassword">Confirm New Password</label>
+              <input id="confirmChangeDistrictManagerPassword" type="password" autocomplete="new-password" placeholder="Re-enter new password" />
+
+              <p id="districtManagerSettingsError" class="form-error hidden"></p>
+              <button id="saveDistrictManagerPasswordBtn" class="submit-btn" type="button">Change Password</button>
+            </div>
+
+            <div class="mechanic-settings-section danger-section">
+              <h3>Delete District Manager</h3>
+              <p>Deleting this district manager removes the profile and password access.</p>
+              <button id="deleteDistrictManagerBtn" class="danger-btn" type="button">Delete District Manager</button>
+            </div>
+          </div>
+
+          <div class="mechanic-empty-state">
+            District manager landing page.
+          </div>
+        </div>
+      </div>
+
       <div id="mechanicLockScreen" class="hidden">
         <div class="content-wrap mechanic-lock-wrap">
           <div class="mechanic-lock-card">
@@ -177,40 +260,6 @@
         <div class="utility-card">
           <h2 id="utilityPageHeading">Settings</h2>
           <p id="utilityPageText">App settings will be added here.</p>
-        </div>
-      </div>
-
-      <div id="districtManagerArea" class="detail-content hidden">
-        <div id="dmRosterView">
-          <p class="intro">Select a district manager to get started.</p>
-          <div id="dmRoster" class="checkout-list district-manager-list"></div>
-          <div id="dmAddPanel" class="add-mechanic-panel hidden">
-            <h2>Add District Manager</h2>
-            <label>Manager Name</label><input id="dmName" type="text" autocomplete="off" placeholder="Enter manager name">
-            <label>Create Password</label><input id="dmPassword" type="password" autocomplete="new-password" placeholder="Enter password">
-            <label>Confirm Password</label><input id="dmConfirmPassword" type="password" autocomplete="new-password" placeholder="Re-enter password">
-            <p id="dmAddError" class="form-error hidden"></p>
-            <div class="form-actions"><button id="dmCancelAdd" class="secondary-btn" type="button">Cancel</button><button id="dmSaveAdd" class="submit-btn" type="button">Create Manager</button></div>
-          </div>
-        </div>
-        <div id="dmLockView" class="hidden">
-          <div class="mechanic-lock-card">
-            <h2 id="dmLockName">District Manager</h2>
-            <p>Enter your password to access your manager page.</p>
-            <label>Password</label><input id="dmUnlockPassword" type="password" autocomplete="current-password" placeholder="Password">
-            <p id="dmLockError" class="form-error hidden"></p>
-            <button id="dmUnlockBtn" class="submit-btn" type="button">Unlock</button>
-          </div>
-        </div>
-        <div id="dmPersonalView" class="hidden">
-          <p id="dmPersonalName" class="intro">District Manager</p>
-          <div id="dmSettings" class="mechanic-settings-panel hidden">
-            <h2>Manager Settings</h2>
-            <div class="mechanic-settings-section"><h3>Change Name</h3><label>Manager Name</label><input id="dmNewName" type="text"><button id="dmSaveName" class="submit-btn" type="button">Change Name</button></div>
-            <div class="mechanic-settings-section"><h3>Change Password</h3><label>New Password</label><input id="dmNewPassword" type="password" autocomplete="new-password"><label>Confirm New Password</label><input id="dmConfirmNewPassword" type="password" autocomplete="new-password"><p id="dmSettingsError" class="form-error hidden"></p><button id="dmSavePassword" class="submit-btn" type="button">Change Password</button></div>
-            <div class="mechanic-settings-section danger-section"><h3>Delete Manager</h3><p>Deleting this manager removes the profile and password access.</p><button id="dmDelete" class="danger-btn" type="button">Delete Manager</button></div>
-          </div>
-          <p class="district-manager-placeholder">District manager landing page</p>
         </div>
       </div>
 
@@ -566,6 +615,6 @@
 </main>
 
   <script src="config.js?v=1"></script>
-  <script src="app.js?v=35"></script>
+  <script src="app.js?v=37"></script>
 </body>
 </html>

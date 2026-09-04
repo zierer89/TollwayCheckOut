@@ -780,7 +780,10 @@ textarea{min-height:120px;resize:vertical}
   color:#666;
 }
 
-/* v31 district manager profiles */
-#dmRoster{grid-template-columns:1fr !important;}
-#dmRoster .district-manager-card{min-height:92px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;}
-#dmLockView .mechanic-lock-card{max-width:520px;margin:0 auto;}
+/* v32: District Managers intentionally reuse Fleet Mechanic roster/add/lock styling */
+#districtManagerList{
+  grid-template-columns:1fr !important;
+}
+#districtManagerList .mechanic-card{
+  min-height:92px;
+}

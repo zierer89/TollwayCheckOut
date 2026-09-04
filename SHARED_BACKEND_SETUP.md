@@ -54,5 +54,5 @@ Mechanic profile settings now support:
 - Both actions require the currently unlocked mechanic/PIN session.
 - Deleting a lead mechanic frees that location so a new lead mechanic can be assigned later.
 
-## v31
-Run the updated supabase-schema.sql to add Fleet District Manager profiles and secure password RPC functions.
+## v32 District Managers
+Run the full updated `supabase-schema.sql` when Supabase is available. It adds the district manager profile table and password functions.
