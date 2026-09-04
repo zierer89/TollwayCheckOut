@@ -254,3 +254,9 @@ v38 Admin Credential Reset:
 - On next profile access, the employee must enter that reset code and create/confirm a new PIN or password.
 - Successful reset destroys the temporary reset code and restores normal login.
 - No public Forgot Password button is exposed.
+
+v39 Local Mock Profile Testing:
+- When Supabase is not configured, Admin can create fully usable mock Fleet Mechanic and District Manager profiles on the current device.
+- Mock mechanics support location assignment, Lead Mechanic enforcement, PIN login, PIN change, Admin reset, temporary reset code, new PIN creation, and Admin deletion.
+- Mock District Managers support password login, password change, Admin reset, temporary reset code, new password creation, and Admin deletion.
+- Mock profiles are stored only in that browser/device and are automatically bypassed once the shared Supabase backend is configured.

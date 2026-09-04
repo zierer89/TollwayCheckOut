@@ -603,83 +603,162 @@
     });
   }
 
+  const LOCAL_MECHANICS_KEY = "tollway_mock_mechanics_v39";
+  const LOCAL_MANAGERS_KEY = "tollway_mock_managers_v39";
+
+  function loadLocalProfiles(key){
+    try{
+      const value=JSON.parse(localStorage.getItem(key)||"[]");
+      return Array.isArray(value)?value:[];
+    }catch(e){ return []; }
+  }
+
+  function saveLocalProfiles(key,rows){
+    localStorage.setItem(key,JSON.stringify(rows));
+  }
+
+  function localId(){
+    return "local-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,9);
+  }
+
+  function localMechanics(){
+    return loadLocalProfiles(LOCAL_MECHANICS_KEY);
+  }
+
+  function localManagers(){
+    return loadLocalProfiles(LOCAL_MANAGERS_KEY);
+  }
+
   async function getMechanics(location){
+    if(!backendIsConfigured()){
+      return localMechanics()
+        .filter(m=>m.location===location)
+        .sort((a,b)=>(Number(b.is_lead)-Number(a.is_lead))||a.name.localeCompare(b.name));
+    }
     const rows = await backendRpc("list_fleet_mechanics",{p_location:location});
     return Array.isArray(rows) ? rows : [];
   }
 
   async function createMechanic(location,name,pin,isLead){
-    return backendRpc("create_fleet_mechanic",{
-      p_location:location,
-      p_name:name,
-      p_pin:pin,
-      p_is_lead:Boolean(isLead)
-    });
+    if(!backendIsConfigured()){
+      const rows=localMechanics();
+      if(rows.some(m=>m.location===location && m.name.trim().toLowerCase()===name.trim().toLowerCase())) throw new Error("A mechanic with this name already exists at this location.");
+      if(isLead && rows.some(m=>m.location===location && m.is_lead)) throw new Error("This location already has a Lead Mechanic.");
+      const mechanic={id:localId(),location,name:name.trim(),pin,is_lead:Boolean(isLead),reset_required:false,created_at:new Date().toISOString()};
+      rows.push(mechanic); saveLocalProfiles(LOCAL_MECHANICS_KEY,rows); return mechanic;
+    }
+    return backendRpc("create_fleet_mechanic",{p_location:location,p_name:name,p_pin:pin,p_is_lead:Boolean(isLead)});
   }
 
   async function verifyMechanicPin(mechanicId,pin){
-    return backendRpc("verify_fleet_mechanic_pin",{
-      p_mechanic_id:mechanicId,
-      p_pin:pin
-    });
+    if(!backendIsConfigured()){
+      const m=localMechanics().find(x=>x.id===mechanicId);
+      return Boolean(m && !m.reset_required && m.pin===pin);
+    }
+    return backendRpc("verify_fleet_mechanic_pin",{p_mechanic_id:mechanicId,p_pin:pin});
   }
 
   async function getMechanicSubmissions(mechanicId,pin){
-    const rows = await backendRpc("get_mechanic_submissions",{
-      p_mechanic_id:mechanicId,
-      p_pin:pin
-    });
+    if(!backendIsConfigured()) return [];
+    const rows = await backendRpc("get_mechanic_submissions",{p_mechanic_id:mechanicId,p_pin:pin});
     return Array.isArray(rows) ? rows : [];
   }
 
   async function signOffSubmission(mechanicId,pin,submissionId){
-    return backendRpc("sign_off_checkout_sheet",{
-      p_mechanic_id:mechanicId,
-      p_pin:pin,
-      p_submission_id:submissionId
-    });
+    if(!backendIsConfigured()) throw new Error("Shared submission testing requires Supabase.");
+    return backendRpc("sign_off_checkout_sheet",{p_mechanic_id:mechanicId,p_pin:pin,p_submission_id:submissionId});
   }
 
   async function changeMechanicPinOnline(mechanicId,currentPin,newPin){
-    return backendRpc("change_fleet_mechanic_pin",{
-      p_mechanic_id:mechanicId,
-      p_current_pin:currentPin,
-      p_new_pin:newPin
-    });
+    if(!backendIsConfigured()){
+      const rows=localMechanics(), i=rows.findIndex(x=>x.id===mechanicId);
+      if(i<0) throw new Error("Mechanic not found.");
+      if(rows[i].pin!==currentPin) throw new Error("Incorrect current PIN.");
+      rows[i].pin=newPin; rows[i].reset_required=false; saveLocalProfiles(LOCAL_MECHANICS_KEY,rows); return true;
+    }
+    return backendRpc("change_fleet_mechanic_pin",{p_mechanic_id:mechanicId,p_current_pin:currentPin,p_new_pin:newPin});
   }
 
   async function deleteMechanicOnline(mechanicId,currentPin){
-    return backendRpc("delete_fleet_mechanic",{
-      p_mechanic_id:mechanicId,
-      p_current_pin:currentPin
-    });
+    if(!backendIsConfigured()){
+      const rows=localMechanics(), m=rows.find(x=>x.id===mechanicId);
+      if(!m) throw new Error("Mechanic not found.");
+      if(m.pin!==currentPin) throw new Error("Incorrect current PIN.");
+      saveLocalProfiles(LOCAL_MECHANICS_KEY,rows.filter(x=>x.id!==mechanicId)); return true;
+    }
+    return backendRpc("delete_fleet_mechanic",{p_mechanic_id:mechanicId,p_current_pin:currentPin});
+  }
+
+  async function adminDeleteMechanic(mechanicId){
+    if(!backendIsConfigured()){
+      const rows=localMechanics();
+      if(!rows.some(x=>x.id===mechanicId)) throw new Error("Mechanic not found.");
+      saveLocalProfiles(LOCAL_MECHANICS_KEY,rows.filter(x=>x.id!==mechanicId));
+      localStorage.removeItem(localResetKey("mechanic",mechanicId));
+      return true;
+    }
+    return backendRpc("admin_delete_fleet_mechanic",{p_admin_password:activeAdminPassword,p_mechanic_id:mechanicId});
   }
 
   async function getDistrictManagers(){
+    if(!backendIsConfigured()) return localManagers().sort((a,b)=>a.name.localeCompare(b.name));
     const rows = await backendRpc("list_fleet_district_managers",{});
     return Array.isArray(rows) ? rows : [];
   }
 
   async function createDistrictManager(name,password){
+    if(!backendIsConfigured()){
+      const rows=localManagers();
+      if(rows.some(m=>m.name.trim().toLowerCase()===name.trim().toLowerCase())) throw new Error("A district manager with this name already exists.");
+      const manager={id:localId(),name:name.trim(),password,reset_required:false,created_at:new Date().toISOString()};
+      rows.push(manager); saveLocalProfiles(LOCAL_MANAGERS_KEY,rows); return manager;
+    }
     return backendRpc("create_fleet_district_manager",{p_name:name,p_password:password});
   }
 
   async function verifyDistrictManagerPassword(managerId,password){
+    if(!backendIsConfigured()){
+      const m=localManagers().find(x=>x.id===managerId);
+      return Boolean(m && !m.reset_required && m.password===password);
+    }
     return backendRpc("verify_fleet_district_manager_password",{p_manager_id:managerId,p_password:password});
   }
 
   async function updateDistrictManagerName(managerId,password,newName){
+    if(!backendIsConfigured()) throw new Error("District Manager names are managed by Admin.");
     return backendRpc("update_fleet_district_manager_name",{p_manager_id:managerId,p_password:password,p_new_name:newName});
   }
 
   async function changeDistrictManagerPasswordOnline(managerId,currentPassword,newPassword){
+    if(!backendIsConfigured()){
+      const rows=localManagers(), i=rows.findIndex(x=>x.id===managerId);
+      if(i<0) throw new Error("District Manager not found.");
+      if(rows[i].password!==currentPassword) throw new Error("Incorrect current password.");
+      rows[i].password=newPassword; rows[i].reset_required=false; saveLocalProfiles(LOCAL_MANAGERS_KEY,rows); return true;
+    }
     return backendRpc("change_fleet_district_manager_password",{p_manager_id:managerId,p_current_password:currentPassword,p_new_password:newPassword});
   }
 
   async function deleteDistrictManagerOnline(managerId,password){
+    if(!backendIsConfigured()){
+      const rows=localManagers(), m=rows.find(x=>x.id===managerId);
+      if(!m) throw new Error("District Manager not found.");
+      if(m.password!==password) throw new Error("Incorrect current password.");
+      saveLocalProfiles(LOCAL_MANAGERS_KEY,rows.filter(x=>x.id!==managerId)); return true;
+    }
     return backendRpc("delete_fleet_district_manager",{p_manager_id:managerId,p_password:password});
   }
 
+  async function adminDeleteDistrictManager(managerId){
+    if(!backendIsConfigured()){
+      const rows=localManagers();
+      if(!rows.some(x=>x.id===managerId)) throw new Error("District Manager not found.");
+      saveLocalProfiles(LOCAL_MANAGERS_KEY,rows.filter(x=>x.id!==managerId));
+      localStorage.removeItem(localResetKey("manager",managerId));
+      return true;
+    }
+    return backendRpc("admin_delete_fleet_district_manager",{p_admin_password:activeAdminPassword,p_manager_id:managerId});
+  }
 
   async function renderMechanicRoster(){
     if(!currentFleetLocation) return;
@@ -873,9 +952,16 @@
   function hasLocalReset(type,id){ return Boolean(localStorage.getItem(localResetKey(type,id))); }
   function completeLocalReset(type,id,code,newCredential){
     if(localStorage.getItem(localResetKey(type,id))!==code) throw new Error("Incorrect temporary reset code.");
+    if(type==="mechanic"){
+      const rows=localMechanics(), i=rows.findIndex(x=>x.id===id);
+      if(i<0) throw new Error("Mechanic not found.");
+      rows[i].pin=newCredential; rows[i].reset_required=false; saveLocalProfiles(LOCAL_MECHANICS_KEY,rows);
+    }else{
+      const rows=localManagers(), i=rows.findIndex(x=>x.id===id);
+      if(i<0) throw new Error("District Manager not found.");
+      rows[i].password=newCredential; rows[i].reset_required=false; saveLocalProfiles(LOCAL_MANAGERS_KEY,rows);
+    }
     localStorage.removeItem(localResetKey(type,id));
-    if(type==="mechanic") localStorage.setItem(`tollway_mechanic_pin_${id}`,newCredential);
-    else localStorage.setItem(`tollway_manager_password_${id}`,newCredential);
     return true;
   }
 
@@ -941,13 +1027,13 @@
           try{
             const code=backendIsConfigured()
               ? await backendRpc("admin_reset_fleet_mechanic_pin",{p_admin_password:activeAdminPassword,p_mechanic_id:m.id})
-              : createLocalReset("mechanic",m.id);
+              : (()=>{ const code=createLocalReset("mechanic",m.id); const rows=localMechanics(); const i=rows.findIndex(x=>x.id===m.id); if(i>=0){rows[i].reset_required=true;saveLocalProfiles(LOCAL_MECHANICS_KEY,rows);} return code; })();
             alert(`Temporary reset code for ${m.name}: ${code}\\n\\nGive this code to the mechanic. They will be required to create a new PIN.`);
             renderAdminMechanics();
           }catch(e){alert(e.message);}
         };
         const del=document.createElement("button"); del.type="button"; del.className="danger-btn"; del.textContent="Delete";
-        del.onclick=async()=>{if(!confirm(`Delete ${m.name}?`))return;await backendRpc("admin_delete_fleet_mechanic",{p_admin_password:activeAdminPassword,p_mechanic_id:m.id});renderAdminMechanics();};
+        del.onclick=async()=>{if(!confirm(`Delete ${m.name}?`))return;await adminDeleteMechanic(m.id);renderAdminMechanics();};
         actions.append(reset,del); row.append(name,actions); adminMechanicList.appendChild(row);
       });
     }catch(e){adminMechanicError.textContent=e.message;adminMechanicError.classList.remove("hidden");}
@@ -967,13 +1053,13 @@
           try{
             const code=backendIsConfigured()
               ? await backendRpc("admin_reset_fleet_district_manager_password",{p_admin_password:activeAdminPassword,p_manager_id:m.id})
-              : createLocalReset("manager",m.id);
+              : (()=>{ const code=createLocalReset("manager",m.id); const rows=localManagers(); const i=rows.findIndex(x=>x.id===m.id); if(i>=0){rows[i].reset_required=true;saveLocalProfiles(LOCAL_MANAGERS_KEY,rows);} return code; })();
             alert(`Temporary reset code for ${m.name}: ${code}\\n\\nGive this code to the district manager. They will be required to create a new password.`);
             renderAdminManagers();
           }catch(e){alert(e.message);}
         };
         const del=document.createElement("button"); del.type="button"; del.className="danger-btn"; del.textContent="Delete";
-        del.onclick=async()=>{if(!confirm(`Delete ${m.name}?`))return;await backendRpc("admin_delete_fleet_district_manager",{p_admin_password:activeAdminPassword,p_manager_id:m.id});renderAdminManagers();};
+        del.onclick=async()=>{if(!confirm(`Delete ${m.name}?`))return;await adminDeleteDistrictManager(m.id);renderAdminManagers();};
         actions.append(reset,del); row.append(name,actions); adminManagerList.appendChild(row);
       });
     }catch(e){adminManagerError.textContent=e.message;adminManagerError.classList.remove("hidden");}
