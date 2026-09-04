@@ -1028,55 +1028,11 @@
   }
 
   async function renderAdminMechanics(){
-    adminMechanicList.innerHTML=""; const loc=adminMechanicLocation.value; if(!loc)return;
-    try{
-      const rows=await getMechanics(loc);
-      rows.forEach(m=>{
-        const row=document.createElement("div"); row.className="admin-profile-row";
-        const name=document.createElement("span"); name.textContent=m.name+(m.is_lead?" — Lead Mechanic":"")+(m.reset_required?" — Reset Required":"");
-        const actions=document.createElement("div"); actions.className="admin-profile-actions";
-        const reset=document.createElement("button"); reset.type="button"; reset.className="secondary-btn"; reset.textContent="Reset PIN";
-        reset.onclick=async()=>{
-          if(!confirm(`Reset the PIN for ${m.name}? Their current PIN will stop working.`))return;
-          try{
-            const code=backendIsConfigured()
-              ? await backendRpc("admin_reset_fleet_mechanic_pin",{p_admin_password:activeAdminPassword,p_mechanic_id:m.id})
-              : (()=>{ const code=createLocalReset("mechanic",m.id); const rows=localMechanics(); const i=rows.findIndex(x=>x.id===m.id); if(i>=0){rows[i].reset_required=true;saveLocalProfiles(LOCAL_MECHANICS_KEY,rows);} return code; })();
-            alert(`Temporary reset code for ${m.name}: ${code}\\n\\nGive this code to the mechanic. They will be required to create a new PIN.`);
-            renderAdminMechanics();
-          }catch(e){alert(e.message);}
-        };
-        const del=document.createElement("button"); del.type="button"; del.className="danger-btn"; del.textContent="Delete";
-        del.onclick=async()=>{if(!confirm(`Delete ${m.name}?`))return;await adminDeleteMechanic(m.id);renderAdminMechanics();};
-        actions.append(reset,del); row.append(name,actions); adminMechanicList.appendChild(row);
-      });
-    }catch(e){adminMechanicError.textContent=e.message;adminMechanicError.classList.remove("hidden");}
+    adminMechanicList.innerHTML="";
   }
 
   async function renderAdminManagers(){
     adminManagerList.innerHTML="";
-    try{
-      const rows=await getDistrictManagers();
-      rows.forEach(m=>{
-        const row=document.createElement("div"); row.className="admin-profile-row";
-        const name=document.createElement("span"); name.textContent=m.name+(m.reset_required?" — Reset Required":"");
-        const actions=document.createElement("div"); actions.className="admin-profile-actions";
-        const reset=document.createElement("button"); reset.type="button"; reset.className="secondary-btn"; reset.textContent="Reset Password";
-        reset.onclick=async()=>{
-          if(!confirm(`Reset the password for ${m.name}? Their current password will stop working.`))return;
-          try{
-            const code=backendIsConfigured()
-              ? await backendRpc("admin_reset_fleet_district_manager_password",{p_admin_password:activeAdminPassword,p_manager_id:m.id})
-              : (()=>{ const code=createLocalReset("manager",m.id); const rows=localManagers(); const i=rows.findIndex(x=>x.id===m.id); if(i>=0){rows[i].reset_required=true;saveLocalProfiles(LOCAL_MANAGERS_KEY,rows);} return code; })();
-            alert(`Temporary reset code for ${m.name}: ${code}\\n\\nGive this code to the district manager. They will be required to create a new password.`);
-            renderAdminManagers();
-          }catch(e){alert(e.message);}
-        };
-        const del=document.createElement("button"); del.type="button"; del.className="danger-btn"; del.textContent="Delete";
-        del.onclick=async()=>{if(!confirm(`Delete ${m.name}?`))return;await adminDeleteDistrictManager(m.id);renderAdminManagers();};
-        actions.append(reset,del); row.append(name,actions); adminManagerList.appendChild(row);
-      });
-    }catch(e){adminManagerError.textContent=e.message;adminManagerError.classList.remove("hidden");}
   }
 
   async function getAllAdminMechanics(){
@@ -1563,7 +1519,7 @@
       showMechanicPersonalScreen();
     } else if(currentDetailView === "districtManagerLock" || currentDetailView === "districtManagerPersonal"){
       showDistrictManagerRoster();
-    } else if(currentDetailView === "adminMechanics" || currentDetailView === "adminManagers" || currentDetailView === "adminReset"){
+    } else if(currentDetailView === "adminMasterUsers" || currentDetailView === "adminUserProfile" || currentDetailView === "adminMechanics" || currentDetailView === "adminManagers" || currentDetailView === "adminReset"){
       currentDetailView="adminLanding"; showAdminSubView(adminLandingView,"Admin");
     } else if(currentDetailView === "admin" || currentDetailView === "adminLanding"){
       showHome();

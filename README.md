@@ -304,3 +304,11 @@ v46 Mechanic Creation Confirmation:
 - Preserves the approved v44 UI and working v45 live Supabase connection.
 - After a mechanic is successfully created, the Admin now receives a clear "Mechanic Created Successfully" confirmation.
 - The existing post-create field reset remains intact.
+
+
+v47 Admin Create-Screen Cleanup + Back Navigation:
+- Manage Fleet Mechanics is creation-only; existing mechanics no longer appear below the form.
+- Manage District Managers is creation-only; existing managers no longer appear below the form.
+- Existing users are managed through Master User List -> Admin Profile Controls.
+- Back from Master User List now returns to the Admin landing page.
+- Back from Admin Profile Controls now returns to the Admin landing page.
