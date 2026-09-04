@@ -614,6 +614,32 @@
     });
   }
 
+  function finishSuccessfulSubmission(form,messageEl){
+    const submitBtn=form.querySelector('button[type="submit"]');
+    if(submitBtn) submitBtn.disabled=true;
+    messageEl.textContent="Completed";
+    messageEl.classList.remove("hidden");
+    messageEl.scrollIntoView({behavior:"smooth",block:"center"});
+
+    setTimeout(()=>{
+      form.reset();
+      form.querySelectorAll(".check-row").forEach(row=>{
+        delete row.dataset.status;
+        row.querySelectorAll(".status-btn").forEach(btn=>btn.classList.remove("selected"));
+        const note=row.querySelector(".defect-note");
+        if(note){
+          note.classList.remove("visible");
+          note.required=false;
+          note.value="";
+        }
+      });
+      form.querySelectorAll(".photo-list").forEach(list=>list.innerHTML="");
+      messageEl.classList.add("hidden");
+      if(submitBtn) submitBtn.disabled=false;
+      showHome();
+    },2200);
+  }
+
   const LOCAL_MECHANICS_KEY = "tollway_mock_mechanics_v39";
   const LOCAL_MANAGERS_KEY = "tollway_mock_managers_v39";
 
@@ -844,22 +870,30 @@
     const y=mechanicCalendarMonth.getUTCFullYear(),m=mechanicCalendarMonth.getUTCMonth();
     calendarMonthTitle.textContent=new Intl.DateTimeFormat("en-US",{month:"long",year:"numeric",timeZone:"UTC"}).format(mechanicCalendarMonth);
 
-    const counts={},pendingCounts={};
+    const counts={},pendingCounts={},missedCounts={};
     mechanicSubmissionItems.forEach(x=>{
       const k=centralKey(x.submittedAt);
       if(!k)return;
       counts[k]=(counts[k]||0)+1;
-      if(isLead && k<todayKey && x.reviewStatus!=="Reviewed"){
+      if(isLead && x.reviewStatus!=="Reviewed"){
         pendingCounts[k]=(pendingCounts[k]||0)+1;
+        if(k<todayKey) missedCounts[k]=(missedCounts[k]||0)+1;
       }
     });
 
-    const totalMissed=Object.values(pendingCounts).reduce((sum,n)=>sum+n,0);
-    if(isLead && totalMissed>0){
+    const totalMissed=Object.values(missedCounts).reduce((sum,n)=>sum+n,0);
+    const todayPending=pendingCounts[todayKey]||0;
+
+    if(isLead && (totalMissed>0 || todayPending>0)){
       missedAlert.classList.remove("hidden");
-      missedAlert.textContent=`${totalMissed} prior checkout ${totalMissed===1?"sheet still needs":"sheets still need"} review. Red dates have missed reviews.`;
+      const parts=[];
+      if(totalMissed>0) parts.push(`${totalMissed} prior ${totalMissed===1?"sheet needs":"sheets need"} review`);
+      if(todayPending>0) parts.push(`${todayPending} ${todayPending===1?"sheet is":"sheets are"} pending today`);
+      missedAlert.textContent=parts.join(" • ")+". Red dates were missed; yellow marks today's pending reviews.";
+      missedAlert.classList.toggle("pending-only",totalMissed===0);
     }else{
       missedAlert.classList.add("hidden");
+      missedAlert.classList.remove("pending-only");
       missedAlert.textContent="";
     }
 
@@ -875,10 +909,11 @@
     for(let d=1;d<=days;d++){
       const k=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
       const c=counts[k]||0;
-      const missed=pendingCounts[k]||0;
+      const pending=pendingCounts[k]||0;
+      const missed=missedCounts[k]||0;
       const b=document.createElement("button");
       b.type="button";
-      b.className="calendar-day"+(c?" has-submissions":"")+(missed?" missed-review-date":"");
+      b.className="calendar-day"+(c?" has-submissions":"")+(missed?" missed-review-date":(pending?" pending-review-date":""));
 
       const dayNum=document.createElement("strong");
       dayNum.textContent=d;
@@ -895,7 +930,11 @@
         warn.className="missed-review-count";
         warn.textContent=`${missed} missed`;
         b.appendChild(warn);
-        b.setAttribute("aria-label",`${keyLabel(k)}: ${c} checkout ${c===1?"sheet":"sheets"}, ${missed} missed review${missed===1?"":"s"}`);
+      }else if(pending){
+        const warn=document.createElement("span");
+        warn.className="pending-review-count";
+        warn.textContent=`${pending} pending`;
+        b.appendChild(warn);
       }
 
       b.disabled=!c;
@@ -1377,8 +1416,7 @@
       alert(`Checkout could not be submitted online. ${err.message}`);
       return;
     }
-    submitMessage.classList.remove("hidden");
-    submitMessage.scrollIntoView({behavior:"smooth",block:"center"});
+    finishSuccessfulSubmission(truckForm,submitMessage);
   });
 
 
@@ -1406,8 +1444,7 @@
       alert(`Checkout could not be submitted online. ${err.message}`);
       return;
     }
-    tractorSubmitMessage.classList.remove("hidden");
-    tractorSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
+    finishSuccessfulSubmission(tractorForm,tractorSubmitMessage);
   });
 
   helpForm.addEventListener("submit", async (e) => {
@@ -1432,8 +1469,7 @@
       alert(`Checkout could not be submitted online. ${err.message}`);
       return;
     }
-    helpSubmitMessage.classList.remove("hidden");
-    helpSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
+    finishSuccessfulSubmission(helpForm,helpSubmitMessage);
   });
 
   helpPhotos.addEventListener("change",()=>showPhotoNames(helpPhotos,helpPhotoList));
@@ -1460,8 +1496,7 @@
       alert(`Checkout could not be submitted online. ${err.message}`);
       return;
     }
-    messageSubmitMessage.classList.remove("hidden");
-    messageSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
+    finishSuccessfulSubmission(messageForm,messageSubmitMessage);
   });
 
   messagePhotos.addEventListener("change",()=>showPhotoNames(messagePhotos,messagePhotoList));
@@ -1488,8 +1523,7 @@
       alert(`Checkout could not be submitted online. ${err.message}`);
       return;
     }
-    laneSubmitMessage.classList.remove("hidden");
-    laneSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
+    finishSuccessfulSubmission(laneForm,laneSubmitMessage);
   });
 
   lanePhotos.addEventListener("change",()=>showPhotoNames(lanePhotos,lanePhotoList));
@@ -1514,8 +1548,7 @@
       alert(`Checkout could not be submitted online. ${err.message}`);
       return;
     }
-    sweeperSubmitMessage.classList.remove("hidden");
-    sweeperSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
+    finishSuccessfulSubmission(sweeperForm,sweeperSubmitMessage);
   });
   sweeperPhotos.addEventListener("change",()=>showPhotoNames(sweeperPhotos,sweeperPhotoList));
 
@@ -1539,8 +1572,7 @@
       alert(`Checkout could not be submitted online. ${err.message}`);
       return;
     }
-    equipmentSubmitMessage.classList.remove("hidden");
-    equipmentSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
+    finishSuccessfulSubmission(equipmentForm,equipmentSubmitMessage);
   });
   equipmentPhotos.addEventListener("change",()=>showPhotoNames(equipmentPhotos,equipmentPhotoList));
 
@@ -1568,8 +1600,7 @@
       alert(`Checkout could not be submitted online. ${err.message}`);
       return;
     }
-    tmaSubmitMessage.classList.remove("hidden");
-    tmaSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
+    finishSuccessfulSubmission(tmaForm,tmaSubmitMessage);
   });
 
   tmaPhotos.addEventListener("change", () => showPhotoNames(tmaPhotos, tmaPhotoList));

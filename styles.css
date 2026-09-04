@@ -900,3 +900,37 @@ textarea{min-height:120px;resize:vertical}
     padding:2px 4px;
   }
 }
+
+
+/* v51: pending-today and missed-review calendar states */
+.calendar-day.pending-review-date,
+.calendar-day.pending-review-date.has-submissions{
+  border:3px solid #b7791f;
+  background:#fffaf0;
+  color:#8a5a00;
+}
+.calendar-day .pending-review-count{
+  display:inline-block;
+  padding:3px 6px;
+  border-radius:999px;
+  background:#b7791f;
+  color:#fff;
+  font-size:.64rem;
+  font-weight:900;
+  line-height:1.1;
+}
+.missed-review-alert.pending-only{
+  border-color:#b7791f;
+  background:#fffaf0;
+  color:#8a5a00;
+}
+.submit-message{
+  font-size:1.1rem;
+  font-weight:900;
+}
+@media(max-width:520px){
+  .calendar-day .pending-review-count{
+    font-size:.54rem;
+    padding:2px 4px;
+  }
+}
