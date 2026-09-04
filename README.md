@@ -298,3 +298,9 @@ v45 Live Supabase Connection:
 - Uses the browser-safe Supabase Publishable key.
 - Local mock profiles are automatically bypassed while the live backend is configured.
 - GitHub Pages remains the front-end host; Supabase provides the shared database/backend.
+
+
+v46 Mechanic Creation Confirmation:
+- Preserves the approved v44 UI and working v45 live Supabase connection.
+- After a mechanic is successfully created, the Admin now receives a clear "Mechanic Created Successfully" confirmation.
+- The existing post-create field reset remains intact.
