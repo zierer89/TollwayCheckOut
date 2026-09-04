@@ -60,6 +60,7 @@
   const districtManagerResetScreen=document.getElementById("districtManagerResetScreen"), districtManagerResetName=document.getElementById("districtManagerResetName"), districtManagerResetCode=document.getElementById("districtManagerResetCode"), districtManagerResetNewPassword=document.getElementById("districtManagerResetNewPassword"), districtManagerResetConfirmPassword=document.getElementById("districtManagerResetConfirmPassword"), districtManagerResetError=document.getElementById("districtManagerResetError"), completeDistrictManagerResetBtn=document.getElementById("completeDistrictManagerResetBtn");
   const mechanicLandingContent=document.getElementById("mechanicLandingContent"),mechanicLandingName=document.getElementById("mechanicLandingName"),mechanicWelcome=document.getElementById("mechanicWelcome"),mechanicViewSheetsBtn=document.getElementById("mechanicViewSheetsBtn");
   const districtManagerLandingContent=document.getElementById("districtManagerLandingContent"),districtManagerLandingName=document.getElementById("districtManagerLandingName"),districtManagerWelcome=document.getElementById("districtManagerWelcome"),districtManagerViewSheetsBtn=document.getElementById("districtManagerViewSheetsBtn"),districtManagerSheetsView=document.getElementById("districtManagerSheetsView");
+  const districtManagerCalendarView=document.getElementById("districtManagerCalendarView"),districtManagerCalendarGrid=document.getElementById("districtManagerCalendarGrid"),districtManagerCalendarMonthTitle=document.getElementById("districtManagerCalendarMonthTitle"),districtManagerCalendarPrevBtn=document.getElementById("districtManagerCalendarPrevBtn"),districtManagerCalendarNextBtn=document.getElementById("districtManagerCalendarNextBtn"),districtManagerDayView=document.getElementById("districtManagerDayView"),districtManagerDayTitle=document.getElementById("districtManagerDayTitle"),districtManagerDaySummary=document.getElementById("districtManagerDaySummary"),districtManagerSubmissionList=document.getElementById("districtManagerSubmissionList"),districtManagerSheetsEmpty=document.getElementById("districtManagerSheetsEmpty");
   const mechanicInboxLocation = document.getElementById("mechanicInboxLocation");
   const mechanicSubmissionEmpty = document.getElementById("mechanicSubmissionEmpty");
   const mechanicSubmissionList = document.getElementById("mechanicSubmissionList");
@@ -509,6 +510,9 @@
   let selectedMechanicDateKey=null;
   let selectedDistrictManager = null;
   let activeDistrictManagerPassword = "";
+  let districtManagerSubmissionItems = [];
+  let districtManagerCalendarMonth = null;
+  let selectedDistrictManagerDateKey = null;
   let activeAdminPassword = "";
 
   function backendConfig(){
@@ -731,6 +735,12 @@
     return backendRpc("verify_fleet_district_manager_password",{p_manager_id:managerId,p_password:password});
   }
 
+  async function getDistrictManagerReviewedSubmissions(managerId,password){
+    if(!backendIsConfigured()) return [];
+    const rows=await backendRpc("get_district_manager_reviewed_submissions",{p_manager_id:managerId,p_password:password});
+    return Array.isArray(rows) ? rows : [];
+  }
+
   async function updateDistrictManagerName(managerId,password,newName){
     if(!backendIsConfigured()) throw new Error("District Manager names are managed by Admin.");
     return backendRpc("update_fleet_district_manager_name",{p_manager_id:managerId,p_password:password,p_new_name:newName});
@@ -847,7 +857,7 @@
     const meta = document.createElement("div");
     meta.className = "detail-meta";
     const dt = new Date(item.submittedAt);
-    meta.textContent = `${item.location} • ${isNaN(dt) ? "" : dt.toLocaleString()}`;
+    meta.textContent = `${item.location} • ${isNaN(dt) ? "" : new Intl.DateTimeFormat("en-US",{timeZone:MECHANIC_TIME_ZONE,dateStyle:"medium",timeStyle:"short"}).format(dt)}`;
     card.appendChild(meta);
 
     const section = document.createElement("div");
@@ -868,7 +878,7 @@
       const reviewed = document.createElement("div");
       reviewed.className = "review-complete";
       const who = item.reviewedByName || "Lead Mechanic";
-      const when = item.reviewedAt ? new Date(item.reviewedAt).toLocaleString() : "";
+      const when = item.reviewedAt ? new Intl.DateTimeFormat("en-US",{timeZone:MECHANIC_TIME_ZONE,dateStyle:"medium",timeStyle:"short"}).format(new Date(item.reviewedAt)) : "";
       reviewed.innerHTML = "<strong>Review Signed Off</strong>";
       const detail = document.createElement("span");
       detail.textContent = [who, when].filter(Boolean).join(" • ");
@@ -1498,7 +1508,18 @@
   });
 
   backBtn.addEventListener("click",()=>{
-    if(currentDetailView === "submissionDetail"){
+    if(currentDetailView === "districtManagerSubmissionDetail"){
+      mechanicSubmissionDetail.classList.add("hidden");
+      districtManagerPersonalScreen.classList.remove("hidden");
+      showDistrictManagerDay(selectedDistrictManagerDateKey);
+    } else if(currentDetailView === "districtManagerDay"){
+      renderDistrictManagerCalendar();
+    } else if(currentDetailView === "districtManagerCalendar"){
+      districtManagerSheetsView.classList.add("hidden");
+      districtManagerLandingContent.classList.remove("hidden");
+      currentDetailView="districtManagerPersonal";
+      sheetTitle.textContent=selectedDistrictManager.name;
+    } else if(currentDetailView === "submissionDetail"){
       if(selectedMechanicDateKey) showMechanicDay(selectedMechanicDateKey); else renderMechanicCalendar();
     } else if(currentDetailView === "mechanicDay"){
       renderMechanicCalendar();
@@ -1651,6 +1672,133 @@
     window.scrollTo({top:0,left:0,behavior:"auto"});
   }
 
+  function normalizeManagerSubmissionRows(rows){
+    return rows.map(r=>({
+      id:r.id,type:r.form_type,location:r.location,submittedAt:r.submitted_at,
+      details:Array.isArray(r.details)?r.details:[],
+      reviewStatus:r.review_status||"Reviewed",reviewedByName:r.reviewed_by_name||"",
+      reviewedAt:r.reviewed_at||null
+    }));
+  }
+
+  function renderDistrictManagerCalendar(){
+    currentDetailView="districtManagerCalendar";
+    sheetTitle.textContent="View Checkout Sheets";
+    districtManagerSheetsView.classList.remove("hidden");
+    districtManagerCalendarView.classList.remove("hidden");
+    districtManagerDayView.classList.add("hidden");
+    districtManagerSheetsEmpty.classList.add("hidden");
+    districtManagerCalendarGrid.innerHTML="";
+
+    if(!districtManagerCalendarMonth){
+      const p=centralParts(new Date());
+      districtManagerCalendarMonth=new Date(Date.UTC(p.year,p.month-1,1,12));
+    }
+    const y=districtManagerCalendarMonth.getUTCFullYear(),m=districtManagerCalendarMonth.getUTCMonth();
+    districtManagerCalendarMonthTitle.textContent=new Intl.DateTimeFormat("en-US",{month:"long",year:"numeric",timeZone:"UTC"}).format(districtManagerCalendarMonth);
+
+    const counts={};
+    districtManagerSubmissionItems.forEach(x=>{
+      const k=centralKey(x.reviewedAt || x.submittedAt);
+      if(k) counts[k]=(counts[k]||0)+1;
+    });
+
+    const first=new Date(Date.UTC(y,m,1,12)).getUTCDay();
+    const days=new Date(Date.UTC(y,m+1,0,12)).getUTCDate();
+    for(let i=0;i<first;i++){
+      const q=document.createElement("div");
+      q.className="calendar-day calendar-blank";
+      districtManagerCalendarGrid.appendChild(q);
+    }
+    for(let d=1;d<=days;d++){
+      const k=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+      const c=counts[k]||0;
+      const b=document.createElement("button");
+      b.type="button";
+      b.className="calendar-day"+(c?" has-submissions":"");
+      b.innerHTML=`<strong>${d}</strong><span>${c?`${c} ${c===1?"reviewed":"reviewed"}`:""}</span>`;
+      b.disabled=!c;
+      if(c)b.onclick=()=>showDistrictManagerDay(k);
+      districtManagerCalendarGrid.appendChild(b);
+    }
+  }
+
+  function showDistrictManagerDay(k){
+    selectedDistrictManagerDateKey=k;
+    currentDetailView="districtManagerDay";
+    sheetTitle.textContent="Reviewed Checkout Sheets";
+    districtManagerCalendarView.classList.add("hidden");
+    districtManagerDayView.classList.remove("hidden");
+    districtManagerSubmissionList.innerHTML="";
+    districtManagerDayTitle.textContent=keyLabel(k);
+
+    const items=districtManagerSubmissionItems
+      .filter(x=>centralKey(x.reviewedAt || x.submittedAt)===k)
+      .sort((a,b)=>new Date(a.reviewedAt||a.submittedAt)-new Date(b.reviewedAt||b.submittedAt));
+
+    const locations=[...new Set(items.map(x=>x.location))];
+    districtManagerDaySummary.textContent=`${items.length} reviewed checkout ${items.length===1?"sheet":"sheets"} • ${locations.length} ${locations.length===1?"location":"locations"}`;
+
+    const groups={};
+    items.forEach(x=>(groups[x.location]??=[]).push(x));
+    Object.keys(groups).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).forEach(location=>{
+      const h=document.createElement("div");
+      h.className="submission-group-heading manager-location-heading";
+      h.textContent=`${location} — ${groups[location].length}`;
+      districtManagerSubmissionList.appendChild(h);
+
+      groups[location].forEach(item=>{
+        const b=document.createElement("button");
+        b.type="button";
+        b.className="submission-card";
+        const op=item.details.find(d=>/inspected by|^name$/i.test(String(d.key||"")))?.value||"";
+        const unit=item.details.find(d=>/truck|tractor|machine|equipment|attenuator|message board/i.test(String(d.key||"")))?.value||"";
+        b.innerHTML='<span class="submission-type"></span><span class="submission-meta"></span><span class="review-status"></span>';
+        b.querySelector(".submission-type").textContent=[item.type,unit].filter(Boolean).join(" • ");
+        b.querySelector(".submission-meta").textContent=[op,`Submitted ${centralTime(item.submittedAt)}`,item.reviewedByName?`Reviewed by ${item.reviewedByName}`:""].filter(Boolean).join(" • ");
+        b.querySelector(".review-status").textContent="Reviewed";
+        b.onclick=()=>showDistrictManagerSubmissionDetail(item);
+        districtManagerSubmissionList.appendChild(b);
+      });
+    });
+    window.scrollTo({top:0,left:0,behavior:"auto"});
+  }
+
+  function showDistrictManagerSubmissionDetail(item){
+    districtManagerPersonalScreen.classList.add("hidden");
+    showSubmissionDetail(item);
+    currentDetailView="districtManagerSubmissionDetail";
+  }
+
+  async function renderDistrictManagerReviewedSheets(){
+    if(!selectedDistrictManager || !activeDistrictManagerPassword) return;
+    districtManagerSheetsEmpty.classList.add("hidden");
+    try{
+      districtManagerSubmissionItems=normalizeManagerSubmissionRows(
+        await getDistrictManagerReviewedSubmissions(selectedDistrictManager.id,activeDistrictManagerPassword)
+      );
+      if(!districtManagerSubmissionItems.length){
+        districtManagerCalendarView.classList.add("hidden");
+        districtManagerDayView.classList.add("hidden");
+        districtManagerSheetsEmpty.classList.remove("hidden");
+        currentDetailView="districtManagerCalendar";
+        return;
+      }
+      const latest=districtManagerSubmissionItems
+        .map(x=>centralParts(x.reviewedAt || x.submittedAt))
+        .filter(Boolean)
+        .sort((a,b)=>(b.year-a.year)||(b.month-a.month)||(b.day-a.day))[0];
+      const p=latest||centralParts(new Date());
+      districtManagerCalendarMonth=new Date(Date.UTC(p.year,p.month-1,1,12));
+      renderDistrictManagerCalendar();
+    }catch(e){
+      districtManagerCalendarView.classList.add("hidden");
+      districtManagerDayView.classList.add("hidden");
+      districtManagerSheetsEmpty.classList.remove("hidden");
+      districtManagerSheetsEmpty.textContent=e.message;
+    }
+  }
+
   function showDistrictManagerPersonalScreen(){
     currentDetailView = "districtManagerPersonal";
     districtManagerLockScreen.classList.add("hidden");
@@ -1667,6 +1815,9 @@
     districtManagerWelcome.textContent = `Welcome, ${selectedDistrictManager.name}`;
     districtManagerLandingContent.classList.remove("hidden");
     districtManagerSheetsView.classList.add("hidden");
+    districtManagerCalendarView.classList.remove("hidden");
+    districtManagerDayView.classList.add("hidden");
+    districtManagerSheetsEmpty.classList.add("hidden");
     changeDistrictManagerPassword.value = "";
     confirmChangeDistrictManagerPassword.value = "";
     districtManagerSettingsError.classList.add("hidden");
@@ -1986,10 +2137,27 @@
     renderSubmissionInbox();
     window.scrollTo({top:0,left:0,behavior:"auto"});
   };
+  districtManagerCalendarPrevBtn.onclick=()=>{
+    if(districtManagerCalendarMonth){
+      districtManagerCalendarMonth=new Date(Date.UTC(districtManagerCalendarMonth.getUTCFullYear(),districtManagerCalendarMonth.getUTCMonth()-1,1,12));
+      renderDistrictManagerCalendar();
+    }
+  };
+  districtManagerCalendarNextBtn.onclick=()=>{
+    if(districtManagerCalendarMonth){
+      districtManagerCalendarMonth=new Date(Date.UTC(districtManagerCalendarMonth.getUTCFullYear(),districtManagerCalendarMonth.getUTCMonth()+1,1,12));
+      renderDistrictManagerCalendar();
+    }
+  };
+
   districtManagerViewSheetsBtn.onclick=()=>{
     districtManagerLandingContent.classList.add("hidden");
     districtManagerSheetsView.classList.remove("hidden");
+    districtManagerCalendarView.classList.remove("hidden");
+    districtManagerDayView.classList.add("hidden");
     sheetTitle.textContent="View Checkout Sheets";
+    currentDetailView="districtManagerCalendar";
+    renderDistrictManagerReviewedSheets();
     window.scrollTo({top:0,left:0,behavior:"auto"});
   };
 

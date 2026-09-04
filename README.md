@@ -312,3 +312,13 @@ v47 Admin Create-Screen Cleanup + Back Navigation:
 - Existing users are managed through Master User List -> Admin Profile Controls.
 - Back from Master User List now returns to the Admin landing page.
 - Back from Admin Profile Controls now returns to the Admin landing page.
+
+
+v49 District Manager Reviewed Checkout Sheets:
+- Fleet District Manager > View Checkout Sheets now shows reviewed sheets from ALL Tollway locations.
+- Only sheets signed off as Reviewed by a Lead Mechanic are returned.
+- The manager calendar is organized by the date the Lead Mechanic reviewed the sheet.
+- Selecting a date groups reviewed sheets by location.
+- Each sheet shows type, unit, operator, submitted time, reviewing mechanic, and Reviewed status.
+- District Managers are read-only: they cannot sign off or change mechanic reviews.
+- Live Supabase projects must run v49-supabase-manager-reviewed-sheets.sql once before this page can load.
