@@ -2218,4 +2218,3 @@
   makeChecklist(helpChecklist, helpItems);
   setTimeout(showHome,5000);
 })();
-      alert("Profile Created Successfully");
