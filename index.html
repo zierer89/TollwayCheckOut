@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#118a45" />
   <title>Illinois Tollway Checkout</title>
-  <link rel="stylesheet" href="styles.css?v=41" />
+  <link rel="stylesheet" href="styles.css?v=42" />
 </head>
 <body>
   <main id="app">
@@ -378,6 +378,80 @@
         </div>
       </form>
 
+      <form id="helpForm" class="truck-form hidden">
+        <section class="form-section">
+          <h2>HELP Truck Information</h2>
+          <div class="field-grid">
+            <label>HELP Truck Number<input name="helpTruckNumber" required /></label>
+            <label>Date<input name="helpDate" type="date" required /></label>
+            <label>Time<input name="helpTime" type="time" required /></label>
+            <label>Inspected By<input name="helpInspectedBy" required /></label>
+            <label class="wide">Location
+              <select name="helpLocation" required>
+                <option value="">Select Location</option>
+                <option>M1</option><option>M2</option><option>M3</option><option>M4</option>
+                <option>M5</option><option>M6</option><option>M7</option><option>M8</option>
+                <option>M11</option><option>M12</option><option>M14</option><option>M16</option>
+                <option>CAG</option><option>E02</option><option>E06</option><option>Sign Shop</option><option>Road Electric</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <div id="helpChecklist"></div>
+
+        <section class="form-section">
+          <h2>Truck Condition and Other Information</h2>
+          <div class="field-grid">
+            <label>Exterior of Truck Washed
+              <select name="helpExteriorWashed" required><option value="">Select</option><option>Yes</option><option>No</option></select>
+            </label>
+            <label>Interior Cab Clean
+              <select name="helpInteriorClean" required><option value="">Select</option><option>Yes</option><option>No</option></select>
+            </label>
+            <label>Damage to Truck
+              <select name="helpDamage" required><option value="">Select</option><option>Yes</option><option>No</option></select>
+            </label>
+            <label>Insurance Card
+              <select name="helpInsuranceCard" required><option value="">Select</option><option>Yes</option><option>No</option></select>
+            </label>
+            <label>Safety Sticker Month
+              <select name="helpSafetyMonth" required><option value="">Month</option>
+                <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+                <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
+              </select>
+            </label>
+            <label>Safety Sticker Year
+              <select name="helpSafetyYear" required><option value="">Year</option>
+                <option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option><option>32</option><option>33</option><option>34</option><option>35</option><option>36</option><option>37</option><option>38</option><option>39</option><option>40</option><option>41</option><option>42</option><option>43</option><option>44</option><option>45</option><option>46</option><option>47</option><option>48</option><option>49</option><option>50</option><option>51</option><option>52</option><option>53</option><option>54</option><option>55</option><option>56</option><option>57</option><option>58</option><option>59</option><option>60</option>
+              </select>
+            </label>
+            <label>Last Serviced (Hours)<input name="helpLastServiced" type="number" min="0" step="0.1" required /></label>
+            <label>Current Hours<input name="helpCurrentHours" type="number" min="0" step="0.1" required /></label>
+            <label>Current Mileage<input name="helpCurrentMileage" type="number" min="0" step="1" required /></label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2>Needed Repairs / Notes</h2>
+          <textarea name="helpRepairNotes" rows="5" placeholder="Explain needed repairs here..."></textarea>
+        </section>
+
+        <section class="form-section photo-section">
+          <h2>Photo Log <span class="optional">(Optional)</span></h2>
+          <p class="photo-help">Add photos of damage, defects, leaks, worn parts, missing equipment, or anything else that should be documented.</p>
+          <label class="photo-upload"><span class="photo-symbol">📷</span><span>Add Photos</span>
+            <input id="helpPhotos" type="file" accept="image/*" multiple />
+          </label>
+          <div id="helpPhotoList" class="photo-list"></div>
+        </section>
+
+        <div class="submit-wrap">
+          <button class="submit-btn" type="submit">Submit HELP Checkout</button>
+          <p id="helpSubmitMessage" class="submit-message hidden">HELP Truck checkout submitted successfully.</p>
+        </div>
+      </form>
+
       <form id="messageForm" class="truck-form hidden">
         <section class="form-section">
           <h2>Message Board Information</h2>
@@ -728,6 +802,6 @@
 </main>
 
   <script src="config.js?v=1"></script>
-  <script src="app.js?v=41"></script>
+  <script src="app.js?v=42"></script>
 </body>
 </html>

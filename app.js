@@ -109,6 +109,11 @@
   const messageSubmitMessage = document.getElementById("messageSubmitMessage");
   const messagePhotos = document.getElementById("messagePhotos");
   const messagePhotoList = document.getElementById("messagePhotoList");
+  const helpForm = document.getElementById("helpForm");
+  const helpChecklist = document.getElementById("helpChecklist");
+  const helpSubmitMessage = document.getElementById("helpSubmitMessage");
+  const helpPhotos = document.getElementById("helpPhotos");
+  const helpPhotoList = document.getElementById("helpPhotoList");
 
   const sheets = {
     tractor:["Tractor Checkout","🚜"],
@@ -177,6 +182,75 @@
     ]]
   ];
 
+
+  const helpItems = [
+    ["ENGINE COMPARTMENT",[
+      "Engine oil level",
+      "Coolant level, add only 50/50 mixture",
+      "Transmission fluid level",
+      "Power steering fluid level",
+      "Belt tension",
+      "Check for fluid leaks",
+      "Windshield washer fluid both reservoirs",
+      "Hydraulic oil level"
+    ]],
+    ["CAB INTERIOR",[
+      "Oil pressure and fuel gauge",
+      "Air pressure",
+      "Light controls - head, stop, turn, 4-way and clearance",
+      "Horn, windshield wipers and washer",
+      "Mirrors",
+      "Radio operation",
+      "Brake pedal travel",
+      "Emergency Brake"
+    ]],
+    ["TRUCK CONDITION",[
+      "Seat belts",
+      "Fire extinguisher",
+      "First aid kit",
+      "Flares",
+      "Steering operation",
+      "Air leaks (service brakes off/applied)",
+      "Backup camera"
+    ]],
+    ["TRUCK EXTERIOR",[
+      "Illumination of ALL lights, head, marker, clearance, tail, micro edge, brake, 4-way and arrow board lights",
+      "Tires, wheels for loose lugs and flat tires",
+      "Hydraulic oil level",
+      "Hydraulic tank cap",
+      "Fuel tank cap",
+      "Drain air tanks",
+      "Mud flaps"
+    ]],
+    ["MESSAGE BOARD",[
+      "Verify operation"
+    ]],
+    ["WHEEL LIFT AND WINCH",[
+      "PTO operation",
+      "Winch operation",
+      "Wheel lift operation (run unit)",
+      "Any damage to wheel lift"
+    ]],
+    ["TOOLS AND EQUIPMENT",[
+      "Fire extinguisher",
+      "Hydraulic jack",
+      "Hazmat pillows",
+      "Gasoline",
+      "Coolant",
+      "Signs and cones",
+      "Hand tools",
+      "Air hose",
+      "Broom and shovel",
+      "Invoices",
+      "First aid kit",
+      "Lift safety chains and wheel straps",
+      "AED (Green ready light blinking)",
+      "Two AED PADS (not expired)",
+      "One Battery",
+      "One Complete AED Responder Kit",
+      "Milwaukee 1/2” Impact Wrench"
+    ]]
+  ];
 
   const messageItems = [
     ["MESSAGE BOARD OPERATION",[
@@ -965,6 +1039,7 @@
     sweeperForm.classList.add("hidden");
     laneForm.classList.add("hidden");
     messageForm.classList.add("hidden");
+    helpForm.classList.add("hidden");
     placeholderContent.classList.add("hidden");
 
     const now = new Date();
@@ -1002,6 +1077,13 @@
       laneSubmitMessage.classList.add("hidden");
       const date = laneForm.querySelector('[name="laneDate"]');
       const time = laneForm.querySelector('[name="laneTime"]');
+      if(!date.value) date.value = dateValue;
+      if(!time.value) time.value = timeValue;
+    } else if(key === "help"){
+      helpForm.classList.remove("hidden");
+      helpSubmitMessage.classList.add("hidden");
+      const date = helpForm.querySelector('[name="helpDate"]');
+      const time = helpForm.querySelector('[name="helpTime"]');
       if(!date.value) date.value = dateValue;
       if(!time.value) time.value = timeValue;
     } else if(key === "message"){
@@ -1080,6 +1162,34 @@
     tractorSubmitMessage.classList.remove("hidden");
     tractorSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
   });
+
+  helpForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const rows=[...helpChecklist.querySelectorAll(".check-row")];
+    const missing=rows.filter(row=>!row.dataset.status);
+    const missingDefectNotes=rows.filter(row=>row.dataset.status==="DEFECT" && !row.querySelector(".defect-note").value.trim());
+    if(missing.length){
+      alert(`Please mark every inspection item OK, DEFECT, or N/A. ${missing.length} item(s) are still unanswered.`);
+      missing[0].scrollIntoView({behavior:"smooth",block:"center"});
+      return;
+    }
+    if(missingDefectNotes.length){
+      alert("Please add a comment for every item marked DEFECT.");
+      missingDefectNotes[0].querySelector(".defect-note").focus();
+      return;
+    }
+    if(!helpForm.reportValidity()) return;
+    try{
+      await routeSubmissionToLocation(helpForm);
+    }catch(err){
+      alert(`Checkout could not be submitted online. ${err.message}`);
+      return;
+    }
+    helpSubmitMessage.classList.remove("hidden");
+    helpSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
+  });
+
+  helpPhotos.addEventListener("change",()=>showPhotoNames(helpPhotos,helpPhotoList));
 
   messageForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -1795,5 +1905,6 @@
   makeChecklist(sweeperChecklist, sweeperItems);
   makeChecklist(laneChecklist, laneItems);
   makeChecklist(messageChecklist, messageItems);
+  makeChecklist(helpChecklist, helpItems);
   setTimeout(showHome,5000);
 })();

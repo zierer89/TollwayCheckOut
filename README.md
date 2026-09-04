@@ -239,3 +239,10 @@ v36 Message Board Checkout:
 - Includes message-board identification, mounting type, hours/service hours, checkout reason, instruction-sheet confirmation, voltmeter reading, full operation/movement checklist, defect comments, notes, and optional Photo Log.
 - Uses the existing location routing and submission workflow.
 - Manager/Mechanic paper signatures remain excluded from the operator form.
+
+v37 HELP Truck Checkout:
+- Replaces the HELP Checkout placeholder with the interactive HELP Truck Driver Inspection Sheet based on E-67-FLT.99 (Revised 4/23).
+- Includes all driver inspection sections: Engine Compartment, Cab Interior, Truck Condition, Truck Exterior, Message Board, Wheel Lift and Winch, and Tools and Equipment.
+- Includes truck cleanliness/damage/insurance questions, safety sticker month/year, service hours, current hours, current mileage, Needed Repairs/Notes, and optional Photo Log.
+- Every checklist item requires OK / DEFECT / N/A and DEFECT requires a comment.
+- Mechanic/Manager Review remains excluded from the operator form and is handled by the app review workflow.
