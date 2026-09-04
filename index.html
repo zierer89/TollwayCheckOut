@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#118a45" />
   <title>Illinois Tollway Checkout</title>
-  <link rel="stylesheet" href="styles.css?v=54" />
+  <link rel="stylesheet" href="styles.css?v=55" />
 </head>
 <body>
   <main id="app">
@@ -283,7 +283,8 @@
           <p id="mechanicPersonalHeading" class="intro hidden">Mechanic</p>
           <p id="mechanicInboxLocation" class="mechanic-inbox-location hidden"></p>
 
-          <section id="mechanicCalendarView" class="mechanic-calendar-view hidden">
+          <div id="mechanicMissedReviewAlert" class="missed-review-alert hidden" role="status"></div>
+<section id="mechanicCalendarView" class="mechanic-calendar-view hidden">
 <div class="calendar-toolbar"><button id="calendarPrevBtn" class="calendar-nav-btn" type="button">‹</button><h2 id="calendarMonthTitle"></h2><button id="calendarNextBtn" class="calendar-nav-btn" type="button">›</button></div>
 <div class="calendar-weekdays"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
 <div id="mechanicCalendarGrid" class="mechanic-calendar-grid"></div></section>
@@ -928,6 +929,6 @@
 </main>
 
   <script src="config.js?v=5"></script>
-  <script src="app.js?v=58"></script>
+  <script src="app.js?v=59"></script>
 </body>
 </html>

@@ -857,3 +857,46 @@ textarea{min-height:120px;resize:vertical}
   max-width:760px;
   margin:0 auto 24px;
 }
+
+
+/* v50: Lead Mechanic missed-review alerts */
+.missed-review-alert{
+  max-width:760px;
+  margin:0 auto 14px;
+  padding:12px 14px;
+  border:2px solid #b42318;
+  border-radius:12px;
+  background:#fff4f2;
+  color:#8a1c13;
+  font-weight:800;
+  line-height:1.35;
+}
+
+.calendar-day.missed-review-date,
+.calendar-day.missed-review-date.has-submissions{
+  border:3px solid #b42318;
+  background:#fff4f2;
+  color:#8a1c13;
+}
+
+.calendar-day .missed-review-count{
+  display:inline-block;
+  padding:3px 6px;
+  border-radius:999px;
+  background:#b42318;
+  color:#fff;
+  font-size:.64rem;
+  font-weight:900;
+  line-height:1.1;
+}
+
+@media(max-width:520px){
+  .missed-review-alert{
+    padding:10px 12px;
+    font-size:.88rem;
+  }
+  .calendar-day .missed-review-count{
+    font-size:.54rem;
+    padding:2px 4px;
+  }
+}
