@@ -779,18 +779,26 @@
   }
 
     function finishSuccessfulSubmission(form,messageEl){
-    // Show the completion confirmation immediately and keep it visible
-    // long enough to be noticed before returning to the main landing page.
+    // Hide the old inline completion message; the confirmation is now a popup.
     if(messageEl){
-      messageEl.textContent="Completed";
-      messageEl.classList.remove("hidden");
+      messageEl.classList.add("hidden");
+      messageEl.textContent="";
     }
 
-    // Prevent another submit while the completion state is on screen.
     const submitButton=form.querySelector('button[type="submit"], .submit-btn');
     if(submitButton) submitButton.disabled=true;
 
-    // Reset the form after the user has had a chance to see "Completed".
+    let overlay=document.getElementById("submissionSuccessOverlay");
+    if(!overlay){
+      overlay=document.createElement("div");
+      overlay.id="submissionSuccessOverlay";
+      overlay.className="submission-success-overlay";
+      overlay.innerHTML='<div class="submission-success-popup" role="status" aria-live="assertive">Successfully Submitted</div>';
+      document.body.appendChild(overlay);
+    }
+
+    overlay.classList.remove("hidden");
+
     setTimeout(()=>{
       try{
         form.reset();
@@ -801,12 +809,11 @@
         form.querySelectorAll(".photo-list").forEach(el=>el.innerHTML="");
       }catch(_){}
 
-      if(messageEl) messageEl.classList.add("hidden");
+      overlay.classList.add("hidden");
       if(submitButton) submitButton.disabled=false;
 
-      // Always return to the true main Checkout Sheets landing screen.
       showHome();
-    },2000);
+    },1200);
   }
 
   const LOCAL_MECHANICS_KEY = "tollway_mock_mechanics_v39";
@@ -1369,7 +1376,20 @@
     adminProfileError.classList.add("hidden");
   }
 
+  function hideCheckoutForms(){
+    truckForm.classList.add("hidden");
+    tractorForm.classList.add("hidden");
+    tmaForm.classList.add("hidden");
+    equipmentForm.classList.add("hidden");
+    sweeperForm.classList.add("hidden");
+    laneForm.classList.add("hidden");
+    messageForm.classList.add("hidden");
+    helpForm.classList.add("hidden");
+    placeholderContent.classList.add("hidden");
+  }
+
   function showFleetMechanicsLanding(){
+    hideCheckoutForms();
     mechanicResetScreen.classList.add("hidden"); districtManagerResetScreen.classList.add("hidden");
     hideAdminViews();
     hideDistrictManagerViews();
@@ -1388,6 +1408,7 @@
   }
 
   function showMechanicRoster(location){
+    hideCheckoutForms();
     mechanicResetScreen.classList.add("hidden"); districtManagerResetScreen.classList.add("hidden");
     hideAdminViews();
     hideDistrictManagerViews();
@@ -2181,6 +2202,8 @@
     equipmentForm.classList.add("hidden");
     sweeperForm.classList.add("hidden");
     laneForm.classList.add("hidden");
+    messageForm.classList.add("hidden");
+    helpForm.classList.add("hidden");
     placeholderContent.classList.add("hidden");
 
     utilityPageContent.classList.remove("hidden");

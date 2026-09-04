@@ -1085,3 +1085,31 @@ textarea{min-height:120px;resize:vertical}
   opacity:.65;
   cursor:wait;
 }
+
+
+/* v55.2 submit confirmation */
+.submission-success-overlay{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.22);
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+}
+.submission-success-overlay.hidden{
+  display:none !important;
+}
+.submission-success-popup{
+  background:#118a45;
+  color:#fff;
+  font-size:clamp(1.15rem,4vw,1.5rem);
+  font-weight:800;
+  text-align:center;
+  padding:22px 30px;
+  border-radius:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.22);
+  max-width:calc(100vw - 48px);
+}
