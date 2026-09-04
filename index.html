@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#118a45" />
   <title>Illinois Tollway Checkout</title>
-  <link rel="stylesheet" href="styles.css?v=42" />
+  <link rel="stylesheet" href="styles.css?v=43" />
 </head>
 <body>
   <main id="app">
@@ -184,6 +184,42 @@
 
           <div class="mechanic-empty-state">
             District manager landing page.
+          </div>
+        </div>
+      </div>
+
+      <div id="mechanicResetScreen" class="hidden">
+        <div class="content-wrap mechanic-lock-wrap">
+          <div class="mechanic-lock-card">
+            <div class="lock-symbol">🔑</div>
+            <h2 id="mechanicResetName">Mechanic</h2>
+            <p>Your PIN has been reset by Admin. Enter the temporary reset code and create a new PIN.</p>
+            <label for="mechanicResetCode">Temporary Reset Code</label>
+            <input id="mechanicResetCode" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6-digit code" />
+            <label for="mechanicResetNewPin">Create New PIN</label>
+            <input id="mechanicResetNewPin" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="4–6 digit PIN" />
+            <label for="mechanicResetConfirmPin">Confirm New PIN</label>
+            <input id="mechanicResetConfirmPin" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="Re-enter PIN" />
+            <p id="mechanicResetError" class="form-error hidden"></p>
+            <button id="completeMechanicResetBtn" class="submit-btn" type="button">Create New PIN</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="districtManagerResetScreen" class="hidden">
+        <div class="content-wrap mechanic-lock-wrap">
+          <div class="mechanic-lock-card">
+            <div class="lock-symbol">🔑</div>
+            <h2 id="districtManagerResetName">District Manager</h2>
+            <p>Your password has been reset by Admin. Enter the temporary reset code and create a new password.</p>
+            <label for="districtManagerResetCode">Temporary Reset Code</label>
+            <input id="districtManagerResetCode" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6-digit code" />
+            <label for="districtManagerResetNewPassword">Create New Password</label>
+            <input id="districtManagerResetNewPassword" type="password" autocomplete="new-password" placeholder="Enter new password" />
+            <label for="districtManagerResetConfirmPassword">Confirm New Password</label>
+            <input id="districtManagerResetConfirmPassword" type="password" autocomplete="new-password" placeholder="Re-enter new password" />
+            <p id="districtManagerResetError" class="form-error hidden"></p>
+            <button id="completeDistrictManagerResetBtn" class="submit-btn" type="button">Create New Password</button>
           </div>
         </div>
       </div>
@@ -802,6 +838,6 @@
 </main>
 
   <script src="config.js?v=1"></script>
-  <script src="app.js?v=42"></script>
+  <script src="app.js?v=43"></script>
 </body>
 </html>

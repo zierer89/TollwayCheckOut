@@ -85,7 +85,7 @@ create or replace function public.create_fleet_mechanic(
   p_pin text,
   p_is_lead boolean default false
 )
-returns table(id uuid, location text, name text, is_lead boolean)
+returns table(id uuid, location text, name text, is_lead boolean, reset_required boolean)
 language plpgsql
 security definer
 set search_path = public
@@ -123,7 +123,7 @@ language sql
 security definer
 set search_path = public
 as $$
-  select m.id, m.location, m.name, m.is_lead
+  select m.id, m.location, m.name, m.is_lead, m.reset_required
   from public.fleet_mechanics m
   where m.location = p_location
   order by m.is_lead desc, lower(m.name);
@@ -142,6 +142,7 @@ as $$
     select 1
     from public.fleet_mechanics m
     where m.id = p_mechanic_id
+      and not m.reset_required
       and m.pin_hash = crypt(p_pin, m.pin_hash)
   );
 $$;
@@ -363,12 +364,12 @@ end;
 $$;
 
 create or replace function public.list_fleet_district_managers()
-returns table(id uuid, name text)
+returns table(id uuid, name text, reset_required boolean)
 language sql
 security definer
 set search_path = public
 as $$
-  select m.id, m.name
+  select m.id, m.name, m.reset_required
   from public.fleet_district_managers m
   order by lower(m.name);
 $$;
@@ -386,6 +387,7 @@ as $$
     select 1
     from public.fleet_district_managers m
     where m.id = p_manager_id
+      and not m.reset_required
       and m.password_hash = crypt(p_password, m.password_hash)
   );
 $$;
@@ -545,3 +547,50 @@ grant execute on function public.verify_admin_password(text) to anon, authentica
 grant execute on function public.reset_admin_password(text,text) to anon, authenticated;
 grant execute on function public.admin_delete_fleet_mechanic(text,uuid) to anon, authenticated;
 grant execute on function public.admin_delete_fleet_district_manager(text,uuid) to anon, authenticated;
+
+create or replace function public.admin_reset_fleet_mechanic_pin(p_admin_password text,p_mechanic_id uuid)
+returns text language plpgsql security definer set search_path=public as $$
+declare v_code text;
+begin
+ if not exists(select 1 from public.app_admin where singleton=true and password_hash=crypt(p_admin_password,password_hash)) then raise exception 'Incorrect Admin password'; end if;
+ v_code := lpad((floor(random()*1000000))::int::text,6,'0');
+ update public.fleet_mechanics set reset_required=true, reset_code_hash=crypt(v_code,gen_salt('bf')) where id=p_mechanic_id;
+ if not found then raise exception 'Mechanic not found'; end if;
+ return v_code;
+end; $$;
+
+create or replace function public.complete_fleet_mechanic_pin_reset(p_mechanic_id uuid,p_reset_code text,p_new_pin text)
+returns boolean language plpgsql security definer set search_path=public as $$
+begin
+ if p_new_pin !~ '^[0-9]{4,6}$' then raise exception 'PIN must be 4-6 digits'; end if;
+ update public.fleet_mechanics set pin_hash=crypt(p_new_pin,gen_salt('bf')),reset_required=false,reset_code_hash=null
+ where id=p_mechanic_id and reset_required=true and reset_code_hash=crypt(p_reset_code,reset_code_hash);
+ if not found then raise exception 'Incorrect temporary reset code'; end if;
+ return true;
+end; $$;
+
+create or replace function public.admin_reset_fleet_district_manager_password(p_admin_password text,p_manager_id uuid)
+returns text language plpgsql security definer set search_path=public as $$
+declare v_code text;
+begin
+ if not exists(select 1 from public.app_admin where singleton=true and password_hash=crypt(p_admin_password,password_hash)) then raise exception 'Incorrect Admin password'; end if;
+ v_code := lpad((floor(random()*1000000))::int::text,6,'0');
+ update public.fleet_district_managers set reset_required=true,reset_code_hash=crypt(v_code,gen_salt('bf')) where id=p_manager_id;
+ if not found then raise exception 'District manager not found'; end if;
+ return v_code;
+end; $$;
+
+create or replace function public.complete_fleet_district_manager_password_reset(p_manager_id uuid,p_reset_code text,p_new_password text)
+returns boolean language plpgsql security definer set search_path=public as $$
+begin
+ if length(p_new_password)<4 then raise exception 'Password must be at least 4 characters'; end if;
+ update public.fleet_district_managers set password_hash=crypt(p_new_password,gen_salt('bf')),reset_required=false,reset_code_hash=null
+ where id=p_manager_id and reset_required=true and reset_code_hash=crypt(p_reset_code,reset_code_hash);
+ if not found then raise exception 'Incorrect temporary reset code'; end if;
+ return true;
+end; $$;
+
+grant execute on function public.admin_reset_fleet_mechanic_pin(text,uuid) to anon, authenticated;
+grant execute on function public.complete_fleet_mechanic_pin_reset(uuid,text,text) to anon, authenticated;
+grant execute on function public.admin_reset_fleet_district_manager_password(text,uuid) to anon, authenticated;
+grant execute on function public.complete_fleet_district_manager_password_reset(uuid,text,text) to anon, authenticated;

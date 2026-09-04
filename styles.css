@@ -793,3 +793,6 @@ textarea{min-height:120px;resize:vertical}
 .admin-profile-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid #ddd;font-weight:700;}
 .admin-profile-row .danger-btn{width:auto;margin:0;padding:10px 16px;}
 #adminMechanicLocation{width:100%;margin-bottom:18px;}
+
+/* v38 credential recovery */
+.admin-profile-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.admin-profile-actions .secondary-btn,.admin-profile-actions .danger-btn{width:auto;margin:0;padding:10px 14px}@media(max-width:680px){.admin-profile-row{align-items:flex-start;flex-direction:column}.admin-profile-actions{width:100%;justify-content:flex-start}}

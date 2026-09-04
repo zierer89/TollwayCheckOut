@@ -246,3 +246,11 @@ v37 HELP Truck Checkout:
 - Includes truck cleanliness/damage/insurance questions, safety sticker month/year, service hours, current hours, current mileage, Needed Repairs/Notes, and optional Photo Log.
 - Every checklist item requires OK / DEFECT / N/A and DEFECT requires a comment.
 - Mechanic/Manager Review remains excluded from the operator form and is handled by the app review workflow.
+
+v38 Admin Credential Reset:
+- Admin can reset a mechanic PIN or District Manager password from that person's Admin management row.
+- Reset immediately marks the profile Reset Required and disables the previous credential.
+- Admin receives a one-time 6-digit temporary reset code to give the employee.
+- On next profile access, the employee must enter that reset code and create/confirm a new PIN or password.
+- Successful reset destroys the temporary reset code and restores normal login.
+- No public Forgot Password button is exposed.

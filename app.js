@@ -56,6 +56,8 @@
   const confirmChangeDistrictManagerPassword = document.getElementById("confirmChangeDistrictManagerPassword");
   const districtManagerSettingsError = document.getElementById("districtManagerSettingsError");
   const saveDistrictManagerPasswordBtn = document.getElementById("saveDistrictManagerPasswordBtn");
+  const mechanicResetScreen=document.getElementById("mechanicResetScreen"), mechanicResetName=document.getElementById("mechanicResetName"), mechanicResetCode=document.getElementById("mechanicResetCode"), mechanicResetNewPin=document.getElementById("mechanicResetNewPin"), mechanicResetConfirmPin=document.getElementById("mechanicResetConfirmPin"), mechanicResetError=document.getElementById("mechanicResetError"), completeMechanicResetBtn=document.getElementById("completeMechanicResetBtn");
+  const districtManagerResetScreen=document.getElementById("districtManagerResetScreen"), districtManagerResetName=document.getElementById("districtManagerResetName"), districtManagerResetCode=document.getElementById("districtManagerResetCode"), districtManagerResetNewPassword=document.getElementById("districtManagerResetNewPassword"), districtManagerResetConfirmPassword=document.getElementById("districtManagerResetConfirmPassword"), districtManagerResetError=document.getElementById("districtManagerResetError"), completeDistrictManagerResetBtn=document.getElementById("completeDistrictManagerResetBtn");
   const mechanicInboxLocation = document.getElementById("mechanicInboxLocation");
   const mechanicSubmissionEmpty = document.getElementById("mechanicSubmissionEmpty");
   const mechanicSubmissionList = document.getElementById("mechanicSubmissionList");
@@ -862,6 +864,21 @@
     return true;
   }
 
+  function localResetKey(type,id){ return `tollway_${type}_reset_${id}`; }
+  function createLocalReset(type,id){
+    const code=String(Math.floor(100000+Math.random()*900000));
+    localStorage.setItem(localResetKey(type,id),code);
+    return code;
+  }
+  function hasLocalReset(type,id){ return Boolean(localStorage.getItem(localResetKey(type,id))); }
+  function completeLocalReset(type,id,code,newCredential){
+    if(localStorage.getItem(localResetKey(type,id))!==code) throw new Error("Incorrect temporary reset code.");
+    localStorage.removeItem(localResetKey(type,id));
+    if(type==="mechanic") localStorage.setItem(`tollway_mechanic_pin_${id}`,newCredential);
+    else localStorage.setItem(`tollway_manager_password_${id}`,newCredential);
+    return true;
+  }
+
   function hideAdminViews(){
     adminScreen.classList.add("hidden");
     [adminSetupView,adminLockView,adminLandingView,adminMechanicsView,adminManagersView,adminResetView].forEach(v=>v.classList.add("hidden"));
@@ -912,14 +929,58 @@
 
   async function renderAdminMechanics(){
     adminMechanicList.innerHTML=""; const loc=adminMechanicLocation.value; if(!loc)return;
-    try{const rows=await getMechanics(loc); rows.forEach(m=>{const row=document.createElement("div");row.className="admin-profile-row";const name=document.createElement("span");name.textContent=m.name+(m.is_lead?" — Lead Mechanic":"");const del=document.createElement("button");del.type="button";del.className="danger-btn";del.textContent="Delete";del.onclick=async()=>{if(!confirm(`Delete ${m.name}?`))return;await backendRpc("admin_delete_fleet_mechanic",{p_admin_password:activeAdminPassword,p_mechanic_id:m.id});renderAdminMechanics();};row.append(name,del);adminMechanicList.appendChild(row);});}catch(e){adminMechanicError.textContent=e.message;adminMechanicError.classList.remove("hidden");}
+    try{
+      const rows=await getMechanics(loc);
+      rows.forEach(m=>{
+        const row=document.createElement("div"); row.className="admin-profile-row";
+        const name=document.createElement("span"); name.textContent=m.name+(m.is_lead?" — Lead Mechanic":"")+(m.reset_required?" — Reset Required":"");
+        const actions=document.createElement("div"); actions.className="admin-profile-actions";
+        const reset=document.createElement("button"); reset.type="button"; reset.className="secondary-btn"; reset.textContent="Reset PIN";
+        reset.onclick=async()=>{
+          if(!confirm(`Reset the PIN for ${m.name}? Their current PIN will stop working.`))return;
+          try{
+            const code=backendIsConfigured()
+              ? await backendRpc("admin_reset_fleet_mechanic_pin",{p_admin_password:activeAdminPassword,p_mechanic_id:m.id})
+              : createLocalReset("mechanic",m.id);
+            alert(`Temporary reset code for ${m.name}: ${code}\\n\\nGive this code to the mechanic. They will be required to create a new PIN.`);
+            renderAdminMechanics();
+          }catch(e){alert(e.message);}
+        };
+        const del=document.createElement("button"); del.type="button"; del.className="danger-btn"; del.textContent="Delete";
+        del.onclick=async()=>{if(!confirm(`Delete ${m.name}?`))return;await backendRpc("admin_delete_fleet_mechanic",{p_admin_password:activeAdminPassword,p_mechanic_id:m.id});renderAdminMechanics();};
+        actions.append(reset,del); row.append(name,actions); adminMechanicList.appendChild(row);
+      });
+    }catch(e){adminMechanicError.textContent=e.message;adminMechanicError.classList.remove("hidden");}
   }
+
   async function renderAdminManagers(){
     adminManagerList.innerHTML="";
-    try{const rows=await getDistrictManagers();rows.forEach(m=>{const row=document.createElement("div");row.className="admin-profile-row";const name=document.createElement("span");name.textContent=m.name;const del=document.createElement("button");del.type="button";del.className="danger-btn";del.textContent="Delete";del.onclick=async()=>{if(!confirm(`Delete ${m.name}?`))return;await backendRpc("admin_delete_fleet_district_manager",{p_admin_password:activeAdminPassword,p_manager_id:m.id});renderAdminManagers();};row.append(name,del);adminManagerList.appendChild(row);});}catch(e){adminManagerError.textContent=e.message;adminManagerError.classList.remove("hidden");}
+    try{
+      const rows=await getDistrictManagers();
+      rows.forEach(m=>{
+        const row=document.createElement("div"); row.className="admin-profile-row";
+        const name=document.createElement("span"); name.textContent=m.name+(m.reset_required?" — Reset Required":"");
+        const actions=document.createElement("div"); actions.className="admin-profile-actions";
+        const reset=document.createElement("button"); reset.type="button"; reset.className="secondary-btn"; reset.textContent="Reset Password";
+        reset.onclick=async()=>{
+          if(!confirm(`Reset the password for ${m.name}? Their current password will stop working.`))return;
+          try{
+            const code=backendIsConfigured()
+              ? await backendRpc("admin_reset_fleet_district_manager_password",{p_admin_password:activeAdminPassword,p_manager_id:m.id})
+              : createLocalReset("manager",m.id);
+            alert(`Temporary reset code for ${m.name}: ${code}\\n\\nGive this code to the district manager. They will be required to create a new password.`);
+            renderAdminManagers();
+          }catch(e){alert(e.message);}
+        };
+        const del=document.createElement("button"); del.type="button"; del.className="danger-btn"; del.textContent="Delete";
+        del.onclick=async()=>{if(!confirm(`Delete ${m.name}?`))return;await backendRpc("admin_delete_fleet_district_manager",{p_admin_password:activeAdminPassword,p_manager_id:m.id});renderAdminManagers();};
+        actions.append(reset,del); row.append(name,actions); adminManagerList.appendChild(row);
+      });
+    }catch(e){adminManagerError.textContent=e.message;adminManagerError.classList.remove("hidden");}
   }
 
   function showFleetMechanicsLanding(){
+    mechanicResetScreen.classList.add("hidden"); districtManagerResetScreen.classList.add("hidden");
     hideAdminViews();
     hideDistrictManagerViews();
     currentDetailView = "fleetLocations";
@@ -937,6 +998,7 @@
   }
 
   function showMechanicRoster(location){
+    mechanicResetScreen.classList.add("hidden"); districtManagerResetScreen.classList.add("hidden");
     hideAdminViews();
     hideDistrictManagerViews();
     currentDetailView = "mechanicRoster";
@@ -960,6 +1022,16 @@
   function showMechanicLock(mechanic){
     hideDistrictManagerViews();
     selectedMechanic = mechanic;
+    const resetRequired = mechanic.reset_required || (!backendIsConfigured() && hasLocalReset("mechanic",mechanic.id));
+    if(resetRequired){
+      currentDetailView="mechanicReset";
+      fleetMechanicRoster.classList.add("hidden"); mechanicLockScreen.classList.add("hidden"); mechanicPersonalScreen.classList.add("hidden");
+      mechanicResetScreen.classList.remove("hidden"); districtManagerResetScreen.classList.add("hidden");
+      addMechanicBtn.classList.add("hidden"); mechanicSettingsBtn.classList.add("hidden");
+      sheetTitle.textContent=mechanic.name; mechanicResetName.textContent=mechanic.name;
+      mechanicResetCode.value=""; mechanicResetNewPin.value=""; mechanicResetConfirmPin.value=""; mechanicResetError.classList.add("hidden");
+      window.scrollTo(0,0); return;
+    }
     mechanicSettingsBtn.classList.add("hidden");
     currentDetailView = "mechanicLock";
     fleetMechanicRoster.classList.add("hidden");
@@ -994,6 +1066,7 @@
   }
 
   function showHome(){
+    mechanicResetScreen.classList.add("hidden"); districtManagerResetScreen.classList.add("hidden");
     hideAdminViews();
     hideDistrictManagerViews();
     mechanicSettingsBtn.classList.add("hidden");
@@ -1008,6 +1081,7 @@
   }
 
   function showSheet(key){
+    mechanicResetScreen.classList.add("hidden"); districtManagerResetScreen.classList.add("hidden");
     hideAdminViews();
     hideDistrictManagerViews();
     mechanicSettingsBtn.classList.add("hidden");
@@ -1344,6 +1418,10 @@
       showHome();
     } else if(currentDetailView === "districtManagerRoster"){
       showHome();
+    } else if(currentDetailView === "mechanicReset"){
+      showMechanicRoster(currentFleetLocation);
+    } else if(currentDetailView === "districtManagerReset"){
+      showDistrictManagerRoster();
     } else if(currentDetailView === "mechanicLock" || currentDetailView === "mechanicPersonal"){
       showMechanicRoster(currentFleetLocation);
     } else if(currentDetailView === "mechanicRoster"){
@@ -1419,6 +1497,7 @@
   }
 
   function showDistrictManagerRoster(){
+    mechanicResetScreen.classList.add("hidden"); districtManagerResetScreen.classList.add("hidden");
     hideAdminViews();
     currentDetailView = "districtManagerRoster";
     selectedDistrictManager = null;
@@ -1450,6 +1529,16 @@
 
   function showDistrictManagerLock(manager){
     selectedDistrictManager = manager;
+    const resetRequired = manager.reset_required || (!backendIsConfigured() && hasLocalReset("manager",manager.id));
+    if(resetRequired){
+      activeDistrictManagerPassword=""; currentDetailView="districtManagerReset";
+      districtManagerRoster.classList.add("hidden"); districtManagerLockScreen.classList.add("hidden"); districtManagerPersonalScreen.classList.add("hidden");
+      districtManagerResetScreen.classList.remove("hidden"); mechanicResetScreen.classList.add("hidden");
+      addMechanicBtn.classList.add("hidden"); mechanicSettingsBtn.classList.add("hidden");
+      sheetTitle.textContent=manager.name; districtManagerResetName.textContent=manager.name;
+      districtManagerResetCode.value=""; districtManagerResetNewPassword.value=""; districtManagerResetConfirmPassword.value=""; districtManagerResetError.classList.add("hidden");
+      window.scrollTo(0,0); return;
+    }
     activeDistrictManagerPassword = "";
     currentDetailView = "districtManagerLock";
 
@@ -1784,6 +1873,34 @@
       }
     });
   });
+
+  completeMechanicResetBtn.onclick=async()=>{
+    const code=mechanicResetCode.value.trim(), pin=mechanicResetNewPin.value, confirmPin=mechanicResetConfirmPin.value;
+    mechanicResetError.classList.add("hidden");
+    if(!/^\d{6}$/.test(code)||!/^\d{4,6}$/.test(pin)||pin!==confirmPin){
+      mechanicResetError.textContent=!/^\d{6}$/.test(code)?"Enter the 6-digit temporary reset code.":!/^\d{4,6}$/.test(pin)?"New PIN must be 4–6 digits.":"PINs do not match.";
+      mechanicResetError.classList.remove("hidden"); return;
+    }
+    try{
+      if(backendIsConfigured()) await backendRpc("complete_fleet_mechanic_pin_reset",{p_mechanic_id:selectedMechanic.id,p_reset_code:code,p_new_pin:pin});
+      else completeLocalReset("mechanic",selectedMechanic.id,code,pin);
+      selectedMechanic.reset_required=false; mechanicResetScreen.classList.add("hidden"); alert("New PIN created successfully."); showMechanicLock(selectedMechanic);
+    }catch(e){mechanicResetError.textContent=e.message;mechanicResetError.classList.remove("hidden");}
+  };
+
+  completeDistrictManagerResetBtn.onclick=async()=>{
+    const code=districtManagerResetCode.value.trim(), pass=districtManagerResetNewPassword.value, confirmPass=districtManagerResetConfirmPassword.value;
+    districtManagerResetError.classList.add("hidden");
+    if(!/^\d{6}$/.test(code)||pass.length<4||pass!==confirmPass){
+      districtManagerResetError.textContent=!/^\d{6}$/.test(code)?"Enter the 6-digit temporary reset code.":pass.length<4?"New password must be at least 4 characters.":"Passwords do not match.";
+      districtManagerResetError.classList.remove("hidden"); return;
+    }
+    try{
+      if(backendIsConfigured()) await backendRpc("complete_fleet_district_manager_password_reset",{p_manager_id:selectedDistrictManager.id,p_reset_code:code,p_new_password:pass});
+      else completeLocalReset("manager",selectedDistrictManager.id,code,pass);
+      selectedDistrictManager.reset_required=false; districtManagerResetScreen.classList.add("hidden"); alert("New password created successfully."); showDistrictManagerLock(selectedDistrictManager);
+    }catch(e){districtManagerResetError.textContent=e.message;districtManagerResetError.classList.remove("hidden");}
+  };
 
   unlockMechanicBtn.addEventListener("click",async()=>{
     if(!selectedMechanic) return;
