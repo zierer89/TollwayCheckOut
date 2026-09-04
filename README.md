@@ -267,3 +267,6 @@ v40 Profile Landing Pages:
 - Each landing page has one primary selection: View Checkout Sheets.
 - Existing mechanic inbox/review behavior remains behind View Checkout Sheets.
 - Existing credential settings remain available through the existing settings control.
+
+v41 Admin Mechanic Form Reset:
+- After successfully adding a Fleet Mechanic, the Work Location dropdown now resets along with the mechanic name, PIN, confirmation PIN, and Lead Mechanic checkbox.
