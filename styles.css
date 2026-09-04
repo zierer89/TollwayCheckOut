@@ -369,3 +369,9 @@ textarea{min-height:120px;resize:vertical}
   margin:0;
   line-height:1.45;
 }
+
+.main-fleet-menu{position:absolute;left:16px;top:50%;transform:translateY(-50%)}
+.fleet-menu-btn{width:44px;height:44px;border:0;border-radius:50%;background:transparent;color:inherit;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.fleet-dropdown{position:absolute;left:0;top:50px;min-width:230px;background:#fff;border-radius:10px;box-shadow:0 5px 18px rgba(0,0,0,.22);overflow:hidden;z-index:2000}
+.fleet-dropdown button{display:block;width:100%;padding:15px 18px;border:0;border-bottom:1px solid #e5e5e5;background:#fff;color:#222;text-align:left;font:inherit;cursor:pointer}
+.fleet-dropdown button:last-child{border-bottom:0}

@@ -555,8 +555,22 @@
   homeBtn.addEventListener("click",showHome);
 
 
+  const mainFleetButton = document.getElementById("mainFleetButton");
+  const mainFleetDropdown = document.getElementById("mainFleetDropdown");
   const mainSettingsButton = document.getElementById("mainSettingsButton");
   const mainSettingsDropdown = document.getElementById("mainSettingsDropdown");
+
+  function closeMainFleetMenu(){
+    mainFleetDropdown.classList.add("hidden");
+    mainFleetButton.setAttribute("aria-expanded","false");
+  }
+  mainFleetButton.addEventListener("click",(e)=>{
+    e.stopPropagation();
+    closeMainSettingsMenu();
+    const opening=mainFleetDropdown.classList.contains("hidden");
+    mainFleetDropdown.classList.toggle("hidden");
+    mainFleetButton.setAttribute("aria-expanded",opening ? "true":"false");
+  });
 
   function closeMainSettingsMenu(){
     mainSettingsDropdown.classList.add("hidden");
@@ -565,6 +579,7 @@
 
   mainSettingsButton.addEventListener("click",(e)=>{
     e.stopPropagation();
+    closeMainFleetMenu();
     const opening=mainSettingsDropdown.classList.contains("hidden");
     mainSettingsDropdown.classList.toggle("hidden");
     mainSettingsButton.setAttribute("aria-expanded", opening ? "true" : "false");
@@ -572,6 +587,7 @@
 
   document.addEventListener("click",(e)=>{
     if(!e.target.closest(".main-settings-menu")) closeMainSettingsMenu();
+    if(!e.target.closest(".main-fleet-menu")) closeMainFleetMenu();
   });
 
   function showUtilityPage(page){
@@ -593,17 +609,25 @@
     bottomNav.classList.add("hidden");
 
     if(page === "settings"){
-      sheetTitle.textContent = "Settings";
-      utilityPageHeading.textContent = "Settings";
+      sheetTitle.textContent = "Settings"; utilityPageHeading.textContent = "Settings";
       utilityPageText.textContent = "App settings will be added here.";
-    } else {
-      sheetTitle.textContent = "About";
-      utilityPageHeading.textContent = "About";
+    } else if(page === "about"){
+      sheetTitle.textContent = "About"; utilityPageHeading.textContent = "About";
       utilityPageText.innerHTML = "Illinois Tollway Equipment Checkout App<br><br>Mobile app created by Ryan Zierer 2026";
+    } else if(page === "mechanics"){
+      sheetTitle.textContent = "Fleet Mechanics"; utilityPageHeading.textContent = "Fleet Mechanics";
+      utilityPageText.textContent = "Fleet Mechanics content will be added here.";
+    } else if(page === "managers"){
+      sheetTitle.textContent = "Fleet District Managers"; utilityPageHeading.textContent = "Fleet District Managers";
+      utilityPageText.textContent = "Fleet District Managers content will be added here.";
     }
 
     window.scrollTo({top:0,left:0,behavior:"auto"});
   }
+
+  document.querySelectorAll("[data-fleet-page]").forEach(btn=>{
+    btn.addEventListener("click",()=>{ closeMainFleetMenu(); showUtilityPage(btn.dataset.fleetPage); });
+  });
 
   document.querySelectorAll("[data-menu-page]").forEach(btn=>{
     btn.addEventListener("click",()=>showUtilityPage(btn.dataset.menuPage));

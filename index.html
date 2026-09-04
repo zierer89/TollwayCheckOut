@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#118a45" />
   <title>Illinois Tollway Checkout</title>
-  <link rel="stylesheet" href="styles.css?v=21" />
+  <link rel="stylesheet" href="styles.css?v=22" />
 </head>
 <body>
   <main id="app">
@@ -18,7 +18,13 @@
         <div class="topbar-spacer"></div>
         <h1>Checkout Sheets</h1>
         <div class="topbar-spacer"></div>
-            <div class="main-settings-menu">
+            <div class="main-fleet-menu">
+<button id="mainFleetButton" class="fleet-menu-btn" type="button" aria-label="Open fleet menu" aria-expanded="false">☰</button>
+<div id="mainFleetDropdown" class="fleet-dropdown hidden">
+<button type="button" data-fleet-page="mechanics">Fleet Mechanics</button>
+<button type="button" data-fleet-page="managers">Fleet District Managers</button>
+</div></div>
+<div class="main-settings-menu">
         <button id="mainSettingsButton" class="settings-icon-btn" type="button" aria-label="Open menu" aria-expanded="false">⚙</button>
         <div id="mainSettingsDropdown" class="settings-dropdown hidden">
           <button type="button" data-menu-page="settings">Settings</button>
@@ -408,6 +414,6 @@
     </section>
 </main>
 
-  <script src="app.js?v=21"></script>
+  <script src="app.js?v=22"></script>
 </body>
 </html>

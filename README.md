@@ -107,3 +107,10 @@ v17 Lane Blade Inspection:
 - Includes Needed Repairs / Notes and optional Photo Log.
 - Mechanic Review remains excluded for the future approval workflow.
 - All v16 approved checkout content and app behavior are preserved.
+
+v18 Fleet Menu:
+- Added upper-left hamburger dropdown to the main screen.
+- First selection: Fleet Mechanics.
+- Second selection: Fleet District Managers.
+- Both open labeled pages using the existing sticky header/back-arrow navigation.
+- All approved v17 content remains unchanged.
