@@ -15,6 +15,13 @@ create table if not exists public.fleet_mechanics (
 create unique index if not exists fleet_mechanics_location_name_unique
   on public.fleet_mechanics (location, lower(name));
 
+create table if not exists public.app_admin (
+  singleton boolean primary key default true check (singleton = true),
+  password_hash text not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.app_admin enable row level security;
+
 create table if not exists public.fleet_district_managers (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
@@ -483,3 +490,58 @@ grant execute on function public.verify_fleet_district_manager_password(uuid,tex
 grant execute on function public.update_fleet_district_manager_name(uuid,text,text) to anon, authenticated;
 grant execute on function public.change_fleet_district_manager_password(uuid,text,text) to anon, authenticated;
 grant execute on function public.delete_fleet_district_manager(uuid,text) to anon, authenticated;
+
+create or replace function public.admin_password_exists()
+returns boolean language sql security definer set search_path=public as $$
+ select exists(select 1 from public.app_admin where singleton=true);
+$$;
+
+create or replace function public.create_admin_password(p_password text)
+returns boolean language plpgsql security definer set search_path=public as $$
+begin
+ if exists(select 1 from public.app_admin where singleton=true) then raise exception 'Admin password has already been created'; end if;
+ if length(p_password)<6 then raise exception 'Admin password must be at least 6 characters'; end if;
+ insert into public.app_admin(singleton,password_hash) values(true,crypt(p_password,gen_salt('bf')));
+ return true;
+end; $$;
+
+create or replace function public.verify_admin_password(p_password text)
+returns boolean language sql security definer set search_path=public as $$
+ select exists(select 1 from public.app_admin where singleton=true and password_hash=crypt(p_password,password_hash));
+$$;
+
+create or replace function public.reset_admin_password(p_current_password text,p_new_password text)
+returns boolean language plpgsql security definer set search_path=public as $$
+begin
+ if length(p_new_password)<6 then raise exception 'Admin password must be at least 6 characters'; end if;
+ update public.app_admin set password_hash=crypt(p_new_password,gen_salt('bf')),updated_at=now()
+ where singleton=true and password_hash=crypt(p_current_password,password_hash);
+ if not found then raise exception 'Incorrect Admin password'; end if;
+ return true;
+end; $$;
+
+create or replace function public.admin_delete_fleet_mechanic(p_admin_password text,p_mechanic_id uuid)
+returns boolean language plpgsql security definer set search_path=public as $$
+begin
+ if not exists(select 1 from public.app_admin where singleton=true and password_hash=crypt(p_admin_password,password_hash)) then raise exception 'Incorrect Admin password'; end if;
+ delete from public.fleet_mechanics where id=p_mechanic_id;
+ if not found then raise exception 'Mechanic not found'; end if;
+ return true;
+end; $$;
+
+create or replace function public.admin_delete_fleet_district_manager(p_admin_password text,p_manager_id uuid)
+returns boolean language plpgsql security definer set search_path=public as $$
+begin
+ if not exists(select 1 from public.app_admin where singleton=true and password_hash=crypt(p_admin_password,password_hash)) then raise exception 'Incorrect Admin password'; end if;
+ delete from public.fleet_district_managers where id=p_manager_id;
+ if not found then raise exception 'District manager not found'; end if;
+ return true;
+end; $$;
+
+revoke all on public.app_admin from anon, authenticated;
+grant execute on function public.admin_password_exists() to anon, authenticated;
+grant execute on function public.create_admin_password(text) to anon, authenticated;
+grant execute on function public.verify_admin_password(text) to anon, authenticated;
+grant execute on function public.reset_admin_password(text,text) to anon, authenticated;
+grant execute on function public.admin_delete_fleet_mechanic(text,uuid) to anon, authenticated;
+grant execute on function public.admin_delete_fleet_district_manager(text,uuid) to anon, authenticated;

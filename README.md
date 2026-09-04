@@ -213,3 +213,12 @@ v32 District Manager Mapping Fix:
 - District Manager views are forcibly hidden when entering Fleet Mechanics, any garage roster, mechanic lock/profile pages, the main home page, checkout forms, Settings, or About.
 - Manager cards are no longer hard-coded.
 - Manager profiles use Supabase and include password lock, rename, password change, and delete.
+
+v33 Admin Profile Management:
+- Admin added under Fleet District Managers in hamburger menu.
+- First use creates Admin password; later access requires it.
+- Admin landing: Manage Fleet Mechanics, Manage District Managers, Reset Admin Password.
+- + buttons removed from normal mechanic and district-manager rosters.
+- Admin creates/deletes mechanic and district-manager profiles.
+- Mechanics retain Change PIN only.
+- District Managers retain Change Password only.

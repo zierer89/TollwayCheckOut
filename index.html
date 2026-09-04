@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#118a45" />
   <title>Illinois Tollway Checkout</title>
-  <link rel="stylesheet" href="styles.css?v=37" />
+  <link rel="stylesheet" href="styles.css?v=38" />
 </head>
 <body>
   <main id="app">
@@ -23,6 +23,7 @@
 <div id="mainFleetDropdown" class="fleet-dropdown hidden">
 <button type="button" data-fleet-page="mechanics">Fleet Mechanics</button>
 <button type="button" data-fleet-page="managers">Fleet District Managers</button>
+<button type="button" data-fleet-page="admin">Admin</button>
 </div></div>
 <div class="main-settings-menu">
         <button id="mainSettingsButton" class="settings-icon-btn" type="button" aria-label="Open menu" aria-expanded="false">⚙</button>
@@ -170,30 +171,14 @@
 
           <div id="districtManagerSettingsPanel" class="mechanic-settings-panel hidden">
             <h2>District Manager Settings</h2>
-
-            <div class="mechanic-settings-section">
-              <h3>Change Name</h3>
-              <label for="changeDistrictManagerName">District Manager Name</label>
-              <input id="changeDistrictManagerName" type="text" autocomplete="off" />
-              <button id="saveDistrictManagerNameBtn" class="submit-btn" type="button">Change Name</button>
-            </div>
-
             <div class="mechanic-settings-section">
               <h3>Change Password</h3>
               <label for="changeDistrictManagerPassword">New Password</label>
               <input id="changeDistrictManagerPassword" type="password" autocomplete="new-password" placeholder="Enter new password" />
-
               <label for="confirmChangeDistrictManagerPassword">Confirm New Password</label>
               <input id="confirmChangeDistrictManagerPassword" type="password" autocomplete="new-password" placeholder="Re-enter new password" />
-
               <p id="districtManagerSettingsError" class="form-error hidden"></p>
               <button id="saveDistrictManagerPasswordBtn" class="submit-btn" type="button">Change Password</button>
-            </div>
-
-            <div class="mechanic-settings-section danger-section">
-              <h3>Delete District Manager</h3>
-              <p>Deleting this district manager removes the profile and password access.</p>
-              <button id="deleteDistrictManagerBtn" class="danger-btn" type="button">Delete District Manager</button>
             </div>
           </div>
 
@@ -236,13 +221,7 @@
               <p id="changePinError" class="form-error hidden"></p>
               <button id="saveChangedPinBtn" class="submit-btn" type="button">Change PIN</button>
             </div>
-
-            <div class="mechanic-settings-section danger-section">
-              <h3>Delete Mechanic</h3>
-              <p>Deleting this mechanic removes the profile and PIN access for this location.</p>
-              <button id="deleteMechanicBtn" class="danger-btn" type="button">Delete Mechanic</button>
-            </div>
-          </div>
+</div>
           <div id="mechanicSubmissionEmpty" class="mechanic-empty-state">
             No submitted checkout sheets are waiting for this location.
           </div>
@@ -253,6 +232,87 @@
       <div id="mechanicSubmissionDetail" class="hidden">
         <div class="content-wrap fleet-mechanics-wrap">
           <div id="submissionDetailContent"></div>
+        </div>
+      </div>
+
+      <div id="adminScreen" class="hidden">
+        <div class="content-wrap fleet-mechanics-wrap">
+          <div id="adminSetupView" class="mechanic-lock-card hidden">
+            <h2>Create Admin Password</h2>
+            <p>No Admin password has been created yet. Create one to secure Admin access.</p>
+            <label for="adminSetupPassword">Create Password</label>
+            <input id="adminSetupPassword" type="password" autocomplete="new-password" placeholder="Enter password" />
+            <label for="adminSetupConfirmPassword">Confirm Password</label>
+            <input id="adminSetupConfirmPassword" type="password" autocomplete="new-password" placeholder="Re-enter password" />
+            <p id="adminSetupError" class="form-error hidden"></p>
+            <button id="createAdminPasswordBtn" class="submit-btn" type="button">Create Admin Password</button>
+          </div>
+
+          <div id="adminLockView" class="mechanic-lock-card hidden">
+            <div class="lock-symbol">🔒</div>
+            <h2>Admin</h2>
+            <p>Enter the Admin password to continue.</p>
+            <label for="adminPasswordEntry">Password</label>
+            <input id="adminPasswordEntry" type="password" autocomplete="current-password" placeholder="Enter password" />
+            <p id="adminLockError" class="form-error hidden"></p>
+            <button id="unlockAdminBtn" class="submit-btn" type="button">Unlock</button>
+          </div>
+
+          <div id="adminLandingView" class="hidden">
+            <p class="intro">Admin</p>
+            <div class="checkout-list admin-list">
+              <button id="adminManageMechanicsBtn" type="button" class="checkout-btn"><span>Manage Fleet Mechanics</span></button>
+              <button id="adminManageManagersBtn" type="button" class="checkout-btn"><span>Manage District Managers</span></button>
+              <button id="adminResetPasswordBtn" type="button" class="checkout-btn"><span>Reset Admin Password</span></button>
+            </div>
+          </div>
+
+          <div id="adminMechanicsView" class="hidden">
+            <p class="intro">Manage Fleet Mechanics</p>
+            <label for="adminMechanicLocation">Work Location</label>
+            <select id="adminMechanicLocation">
+              <option value="">Select location</option>
+              <option>M1</option><option>M2</option><option>M3</option><option>M4</option><option>M5</option><option>M6</option><option>M7</option><option>M8</option><option>M11</option><option>M12</option><option>M14</option><option>M16</option><option>CAG</option><option>E02</option><option>E06</option><option>Sign Shop</option><option>Road Electric</option>
+            </select>
+            <div id="adminMechanicAddPanel" class="mechanic-add-panel">
+              <label for="adminMechanicName">Mechanic Name</label>
+              <input id="adminMechanicName" type="text" autocomplete="off" placeholder="Enter mechanic name" />
+              <label for="adminMechanicPin">Create Personal PIN</label>
+              <input id="adminMechanicPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" placeholder="4–6 digit PIN" />
+              <label for="adminMechanicConfirmPin">Confirm PIN</label>
+              <input id="adminMechanicConfirmPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" placeholder="Re-enter PIN" />
+              <label class="lead-mechanic-option"><input id="adminMechanicIsLead" type="checkbox" /><span>Lead Mechanic</span></label>
+              <p class="field-help">Only one lead mechanic can be assigned to each work location.</p>
+              <p id="adminMechanicError" class="form-error hidden"></p>
+              <button id="adminAddMechanicBtn" class="submit-btn" type="button">Add Mechanic</button>
+            </div>
+            <div id="adminMechanicList" class="checkout-list mechanic-list"></div>
+          </div>
+
+          <div id="adminManagersView" class="hidden">
+            <p class="intro">Manage District Managers</p>
+            <div class="mechanic-add-panel">
+              <label for="adminManagerName">District Manager Name</label>
+              <input id="adminManagerName" type="text" autocomplete="off" placeholder="Enter district manager name" />
+              <label for="adminManagerPassword">Create Password</label>
+              <input id="adminManagerPassword" type="password" autocomplete="new-password" placeholder="Enter password" />
+              <label for="adminManagerConfirmPassword">Confirm Password</label>
+              <input id="adminManagerConfirmPassword" type="password" autocomplete="new-password" placeholder="Re-enter password" />
+              <p id="adminManagerError" class="form-error hidden"></p>
+              <button id="adminAddManagerBtn" class="submit-btn" type="button">Add District Manager</button>
+            </div>
+            <div id="adminManagerList" class="checkout-list mechanic-list"></div>
+          </div>
+
+          <div id="adminResetView" class="mechanic-lock-card hidden">
+            <h2>Reset Admin Password</h2>
+            <label for="adminNewPassword">New Password</label>
+            <input id="adminNewPassword" type="password" autocomplete="new-password" placeholder="Enter new password" />
+            <label for="adminConfirmNewPassword">Confirm New Password</label>
+            <input id="adminConfirmNewPassword" type="password" autocomplete="new-password" placeholder="Re-enter new password" />
+            <p id="adminResetError" class="form-error hidden"></p>
+            <button id="saveAdminPasswordBtn" class="submit-btn" type="button">Reset Admin Password</button>
+          </div>
         </div>
       </div>
 
@@ -615,6 +675,6 @@
 </main>
 
   <script src="config.js?v=1"></script>
-  <script src="app.js?v=37"></script>
+  <script src="app.js?v=38"></script>
 </body>
 </html>

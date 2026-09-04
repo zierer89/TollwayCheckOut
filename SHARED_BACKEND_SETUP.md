@@ -56,3 +56,6 @@ Mechanic profile settings now support:
 
 ## v32 District Managers
 Run the full updated `supabase-schema.sql` when Supabase is available. It adds the district manager profile table and password functions.
+
+## v33 Admin
+Run the full updated supabase-schema.sql. It adds the Admin password singleton and Admin delete RPCs.
