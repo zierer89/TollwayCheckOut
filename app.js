@@ -1716,7 +1716,7 @@
       const b=document.createElement("button");
       b.type="button";
       b.className="calendar-day"+(c?" has-submissions":"");
-      b.innerHTML=`<strong>${d}</strong><span>${c?`${c} ${c===1?"reviewed":"reviewed"}`:""}</span>`;
+      b.innerHTML=`<strong>${d}</strong><span>${c?c:""}</span>`;
       b.disabled=!c;
       if(c)b.onclick=()=>showDistrictManagerDay(k);
       districtManagerCalendarGrid.appendChild(b);
