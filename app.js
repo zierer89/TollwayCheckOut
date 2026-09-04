@@ -740,7 +740,7 @@
 
   function backendIsConfigured(){
     const cfg = backendConfig();
-    return Boolean(cfg && cfg.url && cfg.key);
+    return Boolean(cfg && cfg.configured);
   }
 
   function localAdminPasswordExists(){

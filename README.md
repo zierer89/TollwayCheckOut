@@ -228,3 +228,8 @@ v34 Local Admin Testing:
 - During local testing the Admin password is stored only in this browser/device using localStorage.
 - Once Supabase URL/key are configured, Admin credentials automatically use the shared backend instead.
 - This local fallback is for development/testing only; it is not the final shared-device security model.
+
+v35 Admin Password Fix:
+- Corrected backend configuration detection.
+- Placeholder Supabase settings no longer make the app think the shared backend is connected.
+- First-time Admin password creation now correctly uses the local testing fallback until Supabase is actually configured.
