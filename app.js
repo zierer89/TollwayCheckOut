@@ -567,6 +567,8 @@
     if(form === equipmentForm) return "Equipment Checkout";
     if(form === sweeperForm) return "Sweeper Checkout";
     if(form === laneForm) return "Lane Blade Inspection";
+    if(form === messageForm) return "Message Board Checkout";
+    if(form === helpForm) return "HELP Checkout";
     return "Checkout Sheet";
   }
 
@@ -849,9 +851,18 @@
   function centralKey(v){const p=centralParts(v);return p?`${p.year}-${String(p.month).padStart(2,"0")}-${String(p.day).padStart(2,"0")}`:"";}
   function centralTime(v){const d=new Date(v);return isNaN(d)?"":new Intl.DateTimeFormat("en-US",{timeZone:MECHANIC_TIME_ZONE,hour:"numeric",minute:"2-digit"}).format(d);}
   function keyLabel(k){const[y,m,d]=k.split("-").map(Number);return new Intl.DateTimeFormat("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric",timeZone:"UTC"}).format(new Date(Date.UTC(y,m-1,d,12)));}
-  function normalizeSubmissionRows(rows){return rows.map(r=>({id:r.id,type:r.form_type,location:r.location,submittedAt:r.submitted_at,details:Array.isArray(r.details)?r.details:[],reviewStatus:r.review_status||"Pending",reviewedByName:r.reviewed_by_name||"",reviewedAt:r.reviewed_at||null}));}
+  function inferredSubmissionType(rawType,details){
+    if(rawType!=="Checkout Sheet") return rawType;
+    const keys=(Array.isArray(details)?details:[]).map(d=>String(d.key||"").toLowerCase());
+    if(keys.some(k=>k.includes("message board #")||k.includes("reason for check-out")||k.includes("message board instruction sheet"))) return "Message Board Checkout";
+    if(keys.some(k=>k.includes("help truck number"))) return "HELP Checkout";
+    return rawType;
+  }
+  function normalizeSubmissionRows(rows){return rows.map(r=>{const details=Array.isArray(r.details)?r.details:[];return{id:r.id,type:inferredSubmissionType(r.form_type,details),location:r.location,submittedAt:r.submitted_at,details,reviewStatus:r.review_status||"Pending",reviewedByName:r.reviewed_by_name||"",reviewedAt:r.reviewed_at||null};});}
   function renderMechanicCalendar(){
     const missedAlert=document.getElementById("mechanicMissedReviewAlert");
+    if(missedAlert){missedAlert.classList.add("hidden");missedAlert.textContent="";}
+
     currentDetailView="mechanicCalendar";
     sheetTitle.textContent="View Checkout Sheets";
     mechanicCalendarView.classList.remove("hidden");
@@ -866,36 +877,15 @@
     }
 
     const todayKey=centralKey(new Date());
-    const isLead=Boolean(selectedMechanic?.is_lead);
     const y=mechanicCalendarMonth.getUTCFullYear(),m=mechanicCalendarMonth.getUTCMonth();
     calendarMonthTitle.textContent=new Intl.DateTimeFormat("en-US",{month:"long",year:"numeric",timeZone:"UTC"}).format(mechanicCalendarMonth);
 
-    const counts={},pendingCounts={},missedCounts={};
+    const byDate={};
     mechanicSubmissionItems.forEach(x=>{
       const k=centralKey(x.submittedAt);
       if(!k)return;
-      counts[k]=(counts[k]||0)+1;
-      if(isLead && x.reviewStatus!=="Reviewed"){
-        pendingCounts[k]=(pendingCounts[k]||0)+1;
-        if(k<todayKey) missedCounts[k]=(missedCounts[k]||0)+1;
-      }
+      (byDate[k]??=[]).push(x);
     });
-
-    const totalMissed=Object.values(missedCounts).reduce((sum,n)=>sum+n,0);
-    const todayPending=pendingCounts[todayKey]||0;
-
-    if(isLead && (totalMissed>0 || todayPending>0)){
-      missedAlert.classList.remove("hidden");
-      const parts=[];
-      if(totalMissed>0) parts.push(`${totalMissed} prior ${totalMissed===1?"sheet needs":"sheets need"} review`);
-      if(todayPending>0) parts.push(`${todayPending} ${todayPending===1?"sheet is":"sheets are"} pending today`);
-      missedAlert.textContent=parts.join(" • ")+". Red dates were missed; yellow marks today's pending reviews.";
-      missedAlert.classList.toggle("pending-only",totalMissed===0);
-    }else{
-      missedAlert.classList.add("hidden");
-      missedAlert.classList.remove("pending-only");
-      missedAlert.textContent="";
-    }
 
     const first=new Date(Date.UTC(y,m,1,12)).getUTCDay();
     const days=new Date(Date.UTC(y,m+1,0,12)).getUTCDate();
@@ -908,12 +898,21 @@
 
     for(let d=1;d<=days;d++){
       const k=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-      const c=counts[k]||0;
-      const pending=pendingCounts[k]||0;
-      const missed=missedCounts[k]||0;
+      const items=byDate[k]||[];
+      const c=items.length;
+      const pending=items.filter(x=>x.reviewStatus!=="Reviewed").length;
+      const allReviewed=c>0 && pending===0;
+
       const b=document.createElement("button");
       b.type="button";
-      b.className="calendar-day"+(c?" has-submissions":"")+(missed?" missed-review-date":(pending?" pending-review-date":""));
+      b.className="calendar-day";
+
+      if(c){
+        b.classList.add("has-submissions");
+        if(allReviewed) b.classList.add("reviewed-date");
+        else if(k<todayKey) b.classList.add("missed-review-date");
+        else b.classList.add("pending-review-date");
+      }
 
       const dayNum=document.createElement("strong");
       dayNum.textContent=d;
@@ -921,20 +920,8 @@
 
       if(c){
         const count=document.createElement("span");
-        count.textContent=`${c} ${c===1?"sheet":"sheets"}`;
+        count.textContent=String(c);
         b.appendChild(count);
-      }
-
-      if(missed){
-        const warn=document.createElement("span");
-        warn.className="missed-review-count";
-        warn.textContent=`${missed} missed`;
-        b.appendChild(warn);
-      }else if(pending){
-        const warn=document.createElement("span");
-        warn.className="pending-review-count";
-        warn.textContent=`${pending} pending`;
-        b.appendChild(warn);
       }
 
       b.disabled=!c;
@@ -1274,6 +1261,8 @@
     mechanicInboxLocation.classList.add("hidden");
     mechanicSubmissionEmpty.classList.add("hidden");
     mechanicSubmissionList.classList.add("hidden");
+    const missedAlert=document.getElementById("mechanicMissedReviewAlert");
+    if(missedAlert){missedAlert.classList.add("hidden");missedAlert.textContent="";}
     window.scrollTo({top:0,left:0,behavior:"auto"});
   }
 
@@ -1777,12 +1766,15 @@
   }
 
   function normalizeManagerSubmissionRows(rows){
-    return rows.map(r=>({
-      id:r.id,type:r.form_type,location:r.location,submittedAt:r.submitted_at,
-      details:Array.isArray(r.details)?r.details:[],
-      reviewStatus:r.review_status||"Reviewed",reviewedByName:r.reviewed_by_name||"",
-      reviewedAt:r.reviewed_at||null
-    }));
+    return rows.map(r=>{
+      const details=Array.isArray(r.details)?r.details:[];
+      return {
+        id:r.id,type:inferredSubmissionType(r.form_type,details),location:r.location,submittedAt:r.submitted_at,
+        details,
+        reviewStatus:r.review_status||"Reviewed",reviewedByName:r.reviewed_by_name||"",
+        reviewedAt:r.reviewed_at||null
+      };
+    });
   }
 
   function renderDistrictManagerCalendar(){
@@ -1854,7 +1846,7 @@
       groups[location].forEach(item=>{
         const b=document.createElement("button");
         b.type="button";
-        b.className="submission-card";
+        b.className="submission-card manager-submission-card";
         const op=item.details.find(d=>/inspected by|^name$/i.test(String(d.key||"")))?.value||"";
         const unit=item.details.find(d=>/truck|tractor|machine|equipment|attenuator|message board/i.test(String(d.key||"")))?.value||"";
         b.innerHTML='<span class="submission-type"></span><span class="submission-meta"></span><span class="review-status"></span>';

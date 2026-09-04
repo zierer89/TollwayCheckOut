@@ -934,3 +934,138 @@ textarea{min-height:120px;resize:vertical}
     padding:2px 4px;
   }
 }
+
+
+/* v52: cleaner District Manager reviewed-sheet list */
+#districtManagerSubmissionList{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+#districtManagerSubmissionList .manager-location-heading{
+  margin:18px 0 0;
+}
+
+.manager-submission-card{
+  width:100%;
+  min-height:0;
+  padding:16px 18px;
+  border:2px solid #118a45;
+  border-radius:16px;
+  background:#fff;
+  color:#1f2937;
+  text-align:left;
+  box-shadow:none;
+}
+
+.manager-submission-card .submission-type{
+  display:block;
+  color:#0d7439;
+  font-size:1.08rem;
+  font-weight:900;
+  line-height:1.25;
+}
+
+.manager-submission-card .submission-meta{
+  display:block;
+  margin-top:6px;
+  color:#4b5563;
+  font-size:.92rem;
+  font-weight:700;
+  line-height:1.35;
+}
+
+.manager-submission-card .review-status{
+  margin-top:10px;
+  background:#e7f6ec;
+  color:#0d7439;
+  border:1px solid #b9e1c7;
+}
+
+@media(min-width:700px){
+  #districtManagerSubmissionList{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:14px;
+  }
+  #districtManagerSubmissionList .manager-location-heading{
+    grid-column:1/-1;
+  }
+}
+
+@media(max-width:520px){
+  .manager-submission-card{
+    padding:14px 15px;
+    border-radius:14px;
+  }
+  .manager-submission-card .submission-type{
+    font-size:1rem;
+  }
+  .manager-submission-card .submission-meta{
+    font-size:.86rem;
+  }
+}
+
+
+/* v52 final: mechanic calendar color status + legend */
+.mechanic-calendar-legend{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px 18px;
+  max-width:760px;
+  margin:16px auto 0;
+  padding:12px 14px;
+  border:1px solid #d9e3dd;
+  border-radius:12px;
+  background:#fafcfb;
+  color:#3f4a44;
+  font-size:.82rem;
+  font-weight:700;
+}
+.mechanic-calendar-legend span{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+.legend-swatch{
+  width:20px;
+  height:20px;
+  border-radius:6px;
+  display:inline-block;
+  box-sizing:border-box;
+}
+.legend-reviewed{background:#edf9f0;border:2px solid #65c77d;}
+.legend-pending{background:#fff8df;border:2px solid #e0ad27;}
+.legend-missed{background:#fff0ee;border:2px solid #e56b62;}
+
+.calendar-day.reviewed-date,
+.calendar-day.reviewed-date.has-submissions{
+  background:#edf9f0;
+  border:2px solid #65c77d;
+  color:#176b32;
+}
+.calendar-day.pending-review-date,
+.calendar-day.pending-review-date.has-submissions{
+  background:#fff8df;
+  border:2px solid #e0ad27;
+  color:#795600;
+}
+.calendar-day.missed-review-date,
+.calendar-day.missed-review-date.has-submissions{
+  background:#fff0ee;
+  border:2px solid #e56b62;
+  color:#8f2f28;
+}
+.calendar-day .missed-review-count,
+.calendar-day .pending-review-count{display:none !important;}
+
+@media(max-width:520px){
+  .mechanic-calendar-legend{
+    gap:8px 12px;
+    padding:10px;
+    font-size:.72rem;
+  }
+  .legend-swatch{width:17px;height:17px;}
+}

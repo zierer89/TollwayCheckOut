@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#118a45" />
   <title>Illinois Tollway Checkout</title>
-  <link rel="stylesheet" href="styles.css?v=56" />
+  <link rel="stylesheet" href="styles.css?v=57" />
 </head>
 <body>
   <main id="app">
@@ -287,7 +287,13 @@
 <section id="mechanicCalendarView" class="mechanic-calendar-view hidden">
 <div class="calendar-toolbar"><button id="calendarPrevBtn" class="calendar-nav-btn" type="button">‹</button><h2 id="calendarMonthTitle"></h2><button id="calendarNextBtn" class="calendar-nav-btn" type="button">›</button></div>
 <div class="calendar-weekdays"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
-<div id="mechanicCalendarGrid" class="mechanic-calendar-grid"></div></section>
+<div id="mechanicCalendarGrid" class="mechanic-calendar-grid"></div>
+<div id="mechanicCalendarLegend" class="mechanic-calendar-legend" aria-label="Calendar review status legend">
+  <span><i class="legend-swatch legend-reviewed"></i>All reviewed</span>
+  <span><i class="legend-swatch legend-pending"></i>Pending review</span>
+  <span><i class="legend-swatch legend-missed"></i>Missed review</span>
+</div>
+</section>
 <section id="mechanicDayView" class="mechanic-day-view hidden"><h2 id="mechanicDayTitle"></h2><p id="mechanicDaySummary"></p></section>
 <div id="mechanicSettingsPanel" class="mechanic-settings-panel hidden">
             <h2>Mechanic Settings</h2>
@@ -929,6 +935,6 @@
 </main>
 
   <script src="config.js?v=5"></script>
-  <script src="app.js?v=60"></script>
+  <script src="app.js?v=61"></script>
 </body>
 </html>
