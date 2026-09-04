@@ -233,3 +233,9 @@ v35 Admin Password Fix:
 - Corrected backend configuration detection.
 - Placeholder Supabase settings no longer make the app think the shared backend is connected.
 - First-time Admin password creation now correctly uses the local testing fallback until Supabase is actually configured.
+
+v36 Message Board Checkout:
+- Replaces the Message Board placeholder with an interactive checkout based on E-67-FLT.003.
+- Includes message-board identification, mounting type, hours/service hours, checkout reason, instruction-sheet confirmation, voltmeter reading, full operation/movement checklist, defect comments, notes, and optional Photo Log.
+- Uses the existing location routing and submission workflow.
+- Manager/Mechanic paper signatures remain excluded from the operator form.

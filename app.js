@@ -104,6 +104,11 @@
   const laneSubmitMessage = document.getElementById("laneSubmitMessage");
   const lanePhotos = document.getElementById("lanePhotos");
   const lanePhotoList = document.getElementById("lanePhotoList");
+  const messageForm = document.getElementById("messageForm");
+  const messageChecklist = document.getElementById("messageChecklist");
+  const messageSubmitMessage = document.getElementById("messageSubmitMessage");
+  const messagePhotos = document.getElementById("messagePhotos");
+  const messagePhotoList = document.getElementById("messagePhotoList");
 
   const sheets = {
     tractor:["Tractor Checkout","🚜"],
@@ -172,6 +177,26 @@
     ]]
   ];
 
+
+  const messageItems = [
+    ["MESSAGE BOARD OPERATION",[
+      "Computer Keyboard Operation",
+      "Test Message Board Sign Function",
+      "Sign Lift Mechanism",
+      "Voltmeter Gauge",
+      "Sign Hand Brake (5 lb. Pull Maximum)"
+    ]],
+    ["IF THE UNIT IS GOING TO BE MOVED, CHECK THE FOLLOWING",[
+      "Tire Condition",
+      "Wheel Lug Nuts",
+      "Safety Chains",
+      "Pintle Hitch and Draw Bar",
+      "All Outrigger Jacks for Operation",
+      "Enclosure Latch Operation",
+      "Sign Enclosure/Cover Latches",
+      "Tail Lights (all functions)"
+    ]]
+  ];
 
   const laneItems = [
     ["FLUID LEVELS",[
@@ -939,6 +964,7 @@
     equipmentForm.classList.add("hidden");
     sweeperForm.classList.add("hidden");
     laneForm.classList.add("hidden");
+    messageForm.classList.add("hidden");
     placeholderContent.classList.add("hidden");
 
     const now = new Date();
@@ -978,6 +1004,11 @@
       const time = laneForm.querySelector('[name="laneTime"]');
       if(!date.value) date.value = dateValue;
       if(!time.value) time.value = timeValue;
+    } else if(key === "message"){
+      messageForm.classList.remove("hidden");
+      messageSubmitMessage.classList.add("hidden");
+      const date = messageForm.querySelector('[name="messageDate"]');
+      if(!date.value) date.value = dateValue;
     } else if(key === "sweeper"){
       sweeperForm.classList.remove("hidden");
       sweeperSubmitMessage.classList.add("hidden");
@@ -1049,6 +1080,34 @@
     tractorSubmitMessage.classList.remove("hidden");
     tractorSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
   });
+
+  messageForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const rows=[...messageChecklist.querySelectorAll(".check-row")];
+    const missing=rows.filter(row=>!row.dataset.status);
+    const missingDefectNotes=rows.filter(row=>row.dataset.status==="DEFECT" && !row.querySelector(".defect-note").value.trim());
+    if(missing.length){
+      alert(`Please mark every inspection item OK, DEFECT, or N/A. ${missing.length} item(s) are still unanswered.`);
+      missing[0].scrollIntoView({behavior:"smooth",block:"center"});
+      return;
+    }
+    if(missingDefectNotes.length){
+      alert("Please add a comment for every item marked DEFECT.");
+      missingDefectNotes[0].querySelector(".defect-note").focus();
+      return;
+    }
+    if(!messageForm.reportValidity()) return;
+    try{
+      await routeSubmissionToLocation(messageForm);
+    }catch(err){
+      alert(`Checkout could not be submitted online. ${err.message}`);
+      return;
+    }
+    messageSubmitMessage.classList.remove("hidden");
+    messageSubmitMessage.scrollIntoView({behavior:"smooth",block:"center"});
+  });
+
+  messagePhotos.addEventListener("change",()=>showPhotoNames(messagePhotos,messagePhotoList));
 
   laneForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -1735,5 +1794,6 @@
   makeChecklist(equipmentChecklist, equipmentItems);
   makeChecklist(sweeperChecklist, sweeperItems);
   makeChecklist(laneChecklist, laneItems);
+  makeChecklist(messageChecklist, messageItems);
   setTimeout(showHome,5000);
 })();
