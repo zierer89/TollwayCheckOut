@@ -58,6 +58,8 @@
   const saveDistrictManagerPasswordBtn = document.getElementById("saveDistrictManagerPasswordBtn");
   const mechanicResetScreen=document.getElementById("mechanicResetScreen"), mechanicResetName=document.getElementById("mechanicResetName"), mechanicResetCode=document.getElementById("mechanicResetCode"), mechanicResetNewPin=document.getElementById("mechanicResetNewPin"), mechanicResetConfirmPin=document.getElementById("mechanicResetConfirmPin"), mechanicResetError=document.getElementById("mechanicResetError"), completeMechanicResetBtn=document.getElementById("completeMechanicResetBtn");
   const districtManagerResetScreen=document.getElementById("districtManagerResetScreen"), districtManagerResetName=document.getElementById("districtManagerResetName"), districtManagerResetCode=document.getElementById("districtManagerResetCode"), districtManagerResetNewPassword=document.getElementById("districtManagerResetNewPassword"), districtManagerResetConfirmPassword=document.getElementById("districtManagerResetConfirmPassword"), districtManagerResetError=document.getElementById("districtManagerResetError"), completeDistrictManagerResetBtn=document.getElementById("completeDistrictManagerResetBtn");
+  const mechanicLandingContent=document.getElementById("mechanicLandingContent"),mechanicLandingName=document.getElementById("mechanicLandingName"),mechanicWelcome=document.getElementById("mechanicWelcome"),mechanicViewSheetsBtn=document.getElementById("mechanicViewSheetsBtn");
+  const districtManagerLandingContent=document.getElementById("districtManagerLandingContent"),districtManagerLandingName=document.getElementById("districtManagerLandingName"),districtManagerWelcome=document.getElementById("districtManagerWelcome"),districtManagerViewSheetsBtn=document.getElementById("districtManagerViewSheetsBtn"),districtManagerSheetsView=document.getElementById("districtManagerSheetsView");
   const mechanicInboxLocation = document.getElementById("mechanicInboxLocation");
   const mechanicSubmissionEmpty = document.getElementById("mechanicSubmissionEmpty");
   const mechanicSubmissionList = document.getElementById("mechanicSubmissionList");
@@ -1147,7 +1149,12 @@
     changePinError.classList.add("hidden");
     sheetTitle.textContent = selectedMechanic.name;
     mechanicPersonalHeading.textContent = selectedMechanic.name;
-    renderSubmissionInbox();
+    mechanicLandingName.textContent = selectedMechanic.name;
+    mechanicWelcome.textContent = `Welcome, ${selectedMechanic.name}`;
+    mechanicLandingContent.classList.remove("hidden");
+    mechanicInboxLocation.classList.add("hidden");
+    mechanicSubmissionEmpty.classList.add("hidden");
+    mechanicSubmissionList.classList.add("hidden");
     window.scrollTo({top:0,left:0,behavior:"auto"});
   }
 
@@ -1655,6 +1662,10 @@
 
     sheetTitle.textContent = selectedDistrictManager.name;
     districtManagerPersonalHeading.textContent = selectedDistrictManager.name;
+    districtManagerLandingName.textContent = selectedDistrictManager.name;
+    districtManagerWelcome.textContent = `Welcome, ${selectedDistrictManager.name}`;
+    districtManagerLandingContent.classList.remove("hidden");
+    districtManagerSheetsView.classList.add("hidden");
     changeDistrictManagerPassword.value = "";
     confirmChangeDistrictManagerPassword.value = "";
     districtManagerSettingsError.classList.add("hidden");
@@ -1959,6 +1970,22 @@
       }
     });
   });
+
+  mechanicViewSheetsBtn.onclick=()=>{
+    mechanicLandingContent.classList.add("hidden");
+    mechanicInboxLocation.classList.remove("hidden");
+    mechanicSubmissionEmpty.classList.remove("hidden");
+    mechanicSubmissionList.classList.remove("hidden");
+    sheetTitle.textContent="View Checkout Sheets";
+    renderSubmissionInbox();
+    window.scrollTo({top:0,left:0,behavior:"auto"});
+  };
+  districtManagerViewSheetsBtn.onclick=()=>{
+    districtManagerLandingContent.classList.add("hidden");
+    districtManagerSheetsView.classList.remove("hidden");
+    sheetTitle.textContent="View Checkout Sheets";
+    window.scrollTo({top:0,left:0,behavior:"auto"});
+  };
 
   completeMechanicResetBtn.onclick=async()=>{
     const code=mechanicResetCode.value.trim(), pin=mechanicResetNewPin.value, confirmPin=mechanicResetConfirmPin.value;

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#118a45" />
   <title>Illinois Tollway Checkout</title>
-  <link rel="stylesheet" href="styles.css?v=44" />
+  <link rel="stylesheet" href="styles.css?v=45" />
 </head>
 <body>
   <main id="app">
@@ -166,8 +166,18 @@
       </div>
 
       <div id="districtManagerPersonalScreen" class="hidden">
-        <div class="content-wrap fleet-mechanics-wrap">
-          <p id="districtManagerPersonalHeading" class="intro">District Manager</p>
+        <div class="content-wrap profile-landing-wrap">
+          <section id="districtManagerLandingContent" class="profile-landing">
+            <div class="profile-avatar" aria-hidden="true">👤</div>
+            <h1 id="districtManagerLandingName" class="profile-name">District Manager</h1>
+            <p class="profile-role">Fleet District Manager</p>
+            <div class="profile-welcome-card">
+              <h2 id="districtManagerWelcome">Welcome</h2>
+              <p>Select an option below to continue.</p>
+              <button id="districtManagerViewSheetsBtn" class="profile-action-btn" type="button"><span>▣</span><span>View Checkout Sheets</span><span>›</span></button>
+            </div>
+          </section>
+          <p id="districtManagerPersonalHeading" class="intro hidden">District Manager</p>
 
           <div id="districtManagerSettingsPanel" class="mechanic-settings-panel hidden">
             <h2>District Manager Settings</h2>
@@ -182,8 +192,8 @@
             </div>
           </div>
 
-          <div class="mechanic-empty-state">
-            District manager landing page.
+          <div id="districtManagerSheetsView" class="hidden">
+            <div class="mechanic-empty-state">No checkout sheets are available yet.</div>
           </div>
         </div>
       </div>
@@ -239,9 +249,19 @@
       </div>
 
       <div id="mechanicPersonalScreen" class="hidden">
-        <div class="content-wrap fleet-mechanics-wrap">
-          <p id="mechanicPersonalHeading" class="intro">Mechanic</p>
-          <p id="mechanicInboxLocation" class="mechanic-inbox-location"></p>
+        <div class="content-wrap profile-landing-wrap">
+          <section id="mechanicLandingContent" class="profile-landing">
+            <div class="profile-avatar" aria-hidden="true">🔧</div>
+            <h1 id="mechanicLandingName" class="profile-name">Mechanic</h1>
+            <p class="profile-role">Fleet Mechanic</p>
+            <div class="profile-welcome-card">
+              <h2 id="mechanicWelcome">Welcome</h2>
+              <p>Select an option below to continue.</p>
+              <button id="mechanicViewSheetsBtn" class="profile-action-btn" type="button"><span>▣</span><span>View Checkout Sheets</span><span>›</span></button>
+            </div>
+          </section>
+          <p id="mechanicPersonalHeading" class="intro hidden">Mechanic</p>
+          <p id="mechanicInboxLocation" class="mechanic-inbox-location hidden"></p>
 
           <div id="mechanicSettingsPanel" class="mechanic-settings-panel hidden">
             <h2>Mechanic Settings</h2>
@@ -839,6 +859,6 @@
 </main>
 
   <script src="config.js?v=1"></script>
-  <script src="app.js?v=44"></script>
+  <script src="app.js?v=45"></script>
 </body>
 </html>

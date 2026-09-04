@@ -260,3 +260,10 @@ v39 Local Mock Profile Testing:
 - Mock mechanics support location assignment, Lead Mechanic enforcement, PIN login, PIN change, Admin reset, temporary reset code, new PIN creation, and Admin deletion.
 - Mock District Managers support password login, password change, Admin reset, temporary reset code, new password creation, and Admin deletion.
 - Mock profiles are stored only in that browser/device and are automatically bypassed once the shared Supabase backend is configured.
+\n
+v40 Profile Landing Pages:
+- Fleet Mechanic and Fleet District Manager accounts now open to a profile landing page after successful login.
+- The displayed profile name and Welcome line are populated dynamically from the account created by Admin.
+- Each landing page has one primary selection: View Checkout Sheets.
+- Existing mechanic inbox/review behavior remains behind View Checkout Sheets.
+- Existing credential settings remain available through the existing settings control.
