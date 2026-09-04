@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#118a45" />
   <title>Illinois Tollway Checkout</title>
-  <link rel="stylesheet" href="styles.css?v=32" />
+  <link rel="stylesheet" href="styles.css?v=33" />
 </head>
 <body>
   <main id="app">
@@ -53,7 +53,10 @@
       <header class="topbar detail-bar">
         <button id="backBtn" class="back-btn" type="button">‹</button>
         <h1 id="sheetTitle">Tractor Checkout</h1>
-        <button id="addMechanicBtn" class="header-add-btn hidden" type="button" aria-label="Add mechanic">+</button>
+        <div class="detail-header-actions">
+          <button id="mechanicSettingsBtn" class="header-settings-btn hidden" type="button" aria-label="Mechanic settings">⚙</button>
+          <button id="addMechanicBtn" class="header-add-btn hidden" type="button" aria-label="Add mechanic">+</button>
+        </div>
       </header>
 
             <div id="fleetMechanicsLanding" class="hidden">
@@ -135,6 +138,28 @@
         <div class="content-wrap fleet-mechanics-wrap">
           <p id="mechanicPersonalHeading" class="intro">Mechanic</p>
           <p id="mechanicInboxLocation" class="mechanic-inbox-location"></p>
+
+          <div id="mechanicSettingsPanel" class="mechanic-settings-panel hidden">
+            <h2>Mechanic Settings</h2>
+
+            <div class="mechanic-settings-section">
+              <h3>Change PIN</h3>
+              <label for="changeMechanicPin">New PIN</label>
+              <input id="changeMechanicPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" placeholder="4–6 digit PIN" />
+
+              <label for="confirmChangeMechanicPin">Confirm New PIN</label>
+              <input id="confirmChangeMechanicPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" placeholder="Re-enter new PIN" />
+
+              <p id="changePinError" class="form-error hidden"></p>
+              <button id="saveChangedPinBtn" class="submit-btn" type="button">Change PIN</button>
+            </div>
+
+            <div class="mechanic-settings-section danger-section">
+              <h3>Delete Mechanic</h3>
+              <p>Deleting this mechanic removes the profile and PIN access for this location.</p>
+              <button id="deleteMechanicBtn" class="danger-btn" type="button">Delete Mechanic</button>
+            </div>
+          </div>
           <div id="mechanicSubmissionEmpty" class="mechanic-empty-state">
             No submitted checkout sheets are waiting for this location.
           </div>
@@ -507,6 +532,6 @@
 </main>
 
   <script src="config.js?v=1"></script>
-  <script src="app.js?v=32"></script>
+  <script src="app.js?v=33"></script>
 </body>
 </html>

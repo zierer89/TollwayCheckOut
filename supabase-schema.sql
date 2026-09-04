@@ -260,6 +260,66 @@ begin
 end;
 $$;
 
+
+create or replace function public.change_fleet_mechanic_pin(
+  p_mechanic_id uuid,
+  p_current_pin text,
+  p_new_pin text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if p_new_pin !~ '^[0-9]{4,6}$' then
+    raise exception 'New PIN must be 4 to 6 numbers';
+  end if;
+
+  update public.fleet_mechanics
+  set pin_hash = crypt(p_new_pin, gen_salt('bf'))
+  where id = p_mechanic_id
+    and pin_hash = crypt(p_current_pin, pin_hash);
+
+  if not found then
+    raise exception 'Invalid mechanic or current PIN';
+  end if;
+
+  return true;
+end;
+$$;
+
+create or replace function public.delete_fleet_mechanic(
+  p_mechanic_id uuid,
+  p_current_pin text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists(
+    select 1
+    from public.fleet_mechanics m
+    where m.id = p_mechanic_id
+      and m.pin_hash = crypt(p_current_pin, m.pin_hash)
+  ) then
+    raise exception 'Invalid mechanic or current PIN';
+  end if;
+
+  -- Preserve previously reviewed checkout sheets while allowing the profile to be deleted.
+  update public.checkout_submissions
+  set reviewed_by = null
+  where reviewed_by = p_mechanic_id;
+
+  delete from public.fleet_mechanics
+  where id = p_mechanic_id;
+
+  return true;
+end;
+$$;
+
 revoke all on public.fleet_mechanics from anon, authenticated;
 revoke all on public.checkout_submissions from anon, authenticated;
 
@@ -271,3 +331,6 @@ grant execute on function public.submit_checkout_sheet(text,text,jsonb) to anon,
 grant execute on function public.get_mechanic_submissions(uuid,text) to anon, authenticated;
 
 grant execute on function public.sign_off_checkout_sheet(uuid,text,uuid) to anon, authenticated;
+
+grant execute on function public.change_fleet_mechanic_pin(uuid,text,text) to anon, authenticated;
+grant execute on function public.delete_fleet_mechanic(uuid,text) to anon, authenticated;

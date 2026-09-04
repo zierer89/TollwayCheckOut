@@ -193,3 +193,11 @@ v28 Lead Mechanic Review:
 - All mechanics can view their location's submitted sheets.
 - Only the lead mechanic for that location can sign off a checkout sheet review.
 - Review sign-off stores the lead mechanic and review timestamp in the shared backend.
+
+v29 Mechanic Profile Settings:
+- A settings gear appears in the upper-right after a mechanic unlocks their personal landing page.
+- Settings allow the mechanic PIN to be changed with new-PIN confirmation.
+- Settings allow the mechanic profile to be deleted after confirmation.
+- PIN changes and deletions are handled by secure backend functions using the currently authenticated mechanic/PIN.
+- Deleting a mechanic returns to that location's mechanic roster.
+- If the deleted mechanic was the lead mechanic, that location can later assign a new lead mechanic.

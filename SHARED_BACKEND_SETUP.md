@@ -43,3 +43,13 @@ It is written to add the new lead-mechanic and review-signoff fields/functions w
 - All mechanics at the location can open and view submitted checkout sheets after entering their own PIN.
 - Only the Lead Mechanic for that same location can press `Sign Off Review`.
 - Signed reviews store the reviewing lead mechanic and timestamp.
+
+## v29 database update
+
+If the Supabase project was already created from an earlier version, run the entire updated `supabase-schema.sql` file again.
+
+Mechanic profile settings now support:
+- Change PIN from the mechanic's unlocked landing page.
+- Delete the mechanic profile.
+- Both actions require the currently unlocked mechanic/PIN session.
+- Deleting a lead mechanic frees that location so a new lead mechanic can be assigned later.

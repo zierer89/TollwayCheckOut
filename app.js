@@ -27,6 +27,13 @@
   const unlockMechanicBtn = document.getElementById("unlockMechanicBtn");
   const mechanicPersonalScreen = document.getElementById("mechanicPersonalScreen");
   const mechanicPersonalHeading = document.getElementById("mechanicPersonalHeading");
+  const mechanicSettingsBtn = document.getElementById("mechanicSettingsBtn");
+  const mechanicSettingsPanel = document.getElementById("mechanicSettingsPanel");
+  const changeMechanicPin = document.getElementById("changeMechanicPin");
+  const confirmChangeMechanicPin = document.getElementById("confirmChangeMechanicPin");
+  const changePinError = document.getElementById("changePinError");
+  const saveChangedPinBtn = document.getElementById("saveChangedPinBtn");
+  const deleteMechanicBtn = document.getElementById("deleteMechanicBtn");
   const mechanicInboxLocation = document.getElementById("mechanicInboxLocation");
   const mechanicSubmissionEmpty = document.getElementById("mechanicSubmissionEmpty");
   const mechanicSubmissionList = document.getElementById("mechanicSubmissionList");
@@ -500,6 +507,21 @@
     });
   }
 
+  async function changeMechanicPinOnline(mechanicId,currentPin,newPin){
+    return backendRpc("change_fleet_mechanic_pin",{
+      p_mechanic_id:mechanicId,
+      p_current_pin:currentPin,
+      p_new_pin:newPin
+    });
+  }
+
+  async function deleteMechanicOnline(mechanicId,currentPin){
+    return backendRpc("delete_fleet_mechanic",{
+      p_mechanic_id:mechanicId,
+      p_current_pin:currentPin
+    });
+  }
+
 
   async function renderMechanicRoster(){
     if(!currentFleetLocation) return;
@@ -577,6 +599,7 @@
 
   function showSubmissionDetail(item){
     currentDetailView = "submissionDetail";
+    mechanicSettingsBtn.classList.add("hidden");
     mechanicPersonalScreen.classList.add("hidden");
     mechanicSubmissionDetail.classList.remove("hidden");
     sheetTitle.textContent = item.type;
@@ -659,6 +682,7 @@
   function showFleetMechanicsLanding(){
     currentDetailView = "fleetLocations";
     activeMechanicPin = "";
+    mechanicSettingsBtn.classList.add("hidden");
     currentFleetLocation = null;
     sheetTitle.textContent = "Fleet Mechanics";
     addMechanicBtn.classList.add("hidden");
@@ -673,6 +697,7 @@
   function showMechanicRoster(location){
     currentDetailView = "mechanicRoster";
     activeMechanicPin = "";
+    mechanicSettingsBtn.classList.add("hidden");
     currentFleetLocation = location;
     fleetMechanicsLanding.classList.add("hidden");
     fleetMechanicRoster.classList.add("hidden");
@@ -690,6 +715,7 @@
 
   function showMechanicLock(mechanic){
     selectedMechanic = mechanic;
+    mechanicSettingsBtn.classList.add("hidden");
     currentDetailView = "mechanicLock";
     fleetMechanicRoster.classList.add("hidden");
     mechanicPersonalScreen.classList.add("hidden");
@@ -710,6 +736,11 @@
     mechanicSubmissionDetail.classList.add("hidden");
     mechanicPersonalScreen.classList.remove("hidden");
     addMechanicBtn.classList.add("hidden");
+    mechanicSettingsBtn.classList.remove("hidden");
+    mechanicSettingsPanel.classList.add("hidden");
+    changeMechanicPin.value = "";
+    confirmChangeMechanicPin.value = "";
+    changePinError.classList.add("hidden");
     sheetTitle.textContent = selectedMechanic.name;
     mechanicPersonalHeading.textContent = selectedMechanic.name;
     renderSubmissionInbox();
@@ -717,6 +748,7 @@
   }
 
   function showHome(){
+    mechanicSettingsBtn.classList.add("hidden");
     splash.classList.add("hidden");
     sheet.classList.add("hidden");
     home.classList.remove("hidden");
@@ -728,6 +760,7 @@
   }
 
   function showSheet(key){
+    mechanicSettingsBtn.classList.add("hidden");
     const item=sheets[key];
     if(!item)return;
 
@@ -1030,6 +1063,7 @@
   });
 
   function showUtilityPage(page){
+    mechanicSettingsBtn.classList.add("hidden");
     closeMainSettingsMenu();
 
     splash.classList.add("hidden");
@@ -1071,6 +1105,68 @@
 
   document.querySelectorAll("[data-fleet-location]").forEach(btn=>{
     btn.addEventListener("click",()=>showMechanicRoster(btn.dataset.fleetLocation));
+  });
+
+  mechanicSettingsBtn.addEventListener("click",()=>{
+    mechanicSettingsPanel.classList.toggle("hidden");
+    if(!mechanicSettingsPanel.classList.contains("hidden")){
+      window.scrollTo({top:0,left:0,behavior:"smooth"});
+    }
+  });
+
+  saveChangedPinBtn.addEventListener("click",async()=>{
+    if(!selectedMechanic || !activeMechanicPin) return;
+
+    const newPin = changeMechanicPin.value.trim();
+    const confirmPin = confirmChangeMechanicPin.value.trim();
+    changePinError.classList.add("hidden");
+
+    if(!/^\d{4,6}$/.test(newPin)){
+      changePinError.textContent = "New PIN must be 4 to 6 numbers.";
+      changePinError.classList.remove("hidden");
+      changeMechanicPin.focus();
+      return;
+    }
+    if(newPin !== confirmPin){
+      changePinError.textContent = "PIN entries do not match.";
+      changePinError.classList.remove("hidden");
+      confirmChangeMechanicPin.focus();
+      return;
+    }
+
+    saveChangedPinBtn.disabled = true;
+    try{
+      await changeMechanicPinOnline(selectedMechanic.id,activeMechanicPin,newPin);
+      activeMechanicPin = newPin;
+      changeMechanicPin.value = "";
+      confirmChangeMechanicPin.value = "";
+      mechanicSettingsPanel.classList.add("hidden");
+      alert("PIN changed successfully.");
+    }catch(err){
+      changePinError.textContent = err.message;
+      changePinError.classList.remove("hidden");
+    }finally{
+      saveChangedPinBtn.disabled = false;
+    }
+  });
+
+  deleteMechanicBtn.addEventListener("click",async()=>{
+    if(!selectedMechanic || !activeMechanicPin) return;
+
+    const confirmed = confirm(`Delete ${selectedMechanic.name}'s mechanic profile? This cannot be undone.`);
+    if(!confirmed) return;
+
+    deleteMechanicBtn.disabled = true;
+    try{
+      await deleteMechanicOnline(selectedMechanic.id,activeMechanicPin);
+      const location = currentFleetLocation;
+      selectedMechanic = null;
+      activeMechanicPin = "";
+      showMechanicRoster(location);
+    }catch(err){
+      alert(err.message);
+      deleteMechanicBtn.disabled = false;
+    }
   });
 
   addMechanicBtn.addEventListener("click",()=>{

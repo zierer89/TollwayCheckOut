@@ -681,3 +681,82 @@ textarea{min-height:120px;resize:vertical}
   display:block;
   margin-bottom:4px;
 }
+
+/* v29: mechanic profile settings */
+.detail-header-actions{
+  min-width:44px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:4px;
+}
+.header-settings-btn{
+  width:44px;
+  height:44px;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:#fff;
+  font-size:25px;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  padding:0;
+}
+.header-settings-btn:active{background:rgba(255,255,255,.15);}
+
+.mechanic-settings-panel{
+  margin:0 0 22px;
+  padding:20px;
+  border-radius:16px;
+  background:#f3f3f3;
+}
+.mechanic-settings-panel h2{
+  margin:0 0 16px;
+}
+.mechanic-settings-section{
+  padding:16px 0;
+  border-top:1px solid #d5d5d5;
+}
+.mechanic-settings-section:first-of-type{
+  border-top:0;
+  padding-top:0;
+}
+.mechanic-settings-section h3{
+  margin:0 0 12px;
+}
+.mechanic-settings-section label{
+  display:block;
+  font-weight:800;
+  margin:12px 0 7px;
+}
+.mechanic-settings-section input{
+  width:100%;
+  box-sizing:border-box;
+  min-height:50px;
+  border:1px solid #bbb;
+  border-radius:10px;
+  padding:10px 12px;
+  font:inherit;
+  background:#fff;
+}
+.danger-section{
+  margin-top:8px;
+}
+.danger-section p{
+  margin:0 0 14px;
+  color:#555;
+}
+.danger-btn{
+  width:100%;
+  min-height:50px;
+  border:0;
+  border-radius:10px;
+  background:#b00020;
+  color:#fff;
+  font:inherit;
+  font-weight:800;
+  cursor:pointer;
+}
