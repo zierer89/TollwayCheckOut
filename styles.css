@@ -1135,3 +1135,44 @@ textarea{min-height:120px;resize:vertical}
   opacity:.65;
   cursor:wait;
 }
+
+
+/* v56.1 Fleet District Manager landing action spacing */
+#districtManagerLandingContent .profile-action-btn,
+#districtManagerLandingContent .manager-action-btn,
+#districtManagerLandingContent .personal-action-btn,
+#districtManagerLandingContent .utility-card,
+#districtManagerLandingContent button {
+  position: relative;
+}
+
+#districtManagerLandingContent .action-icon,
+#districtManagerLandingContent .menu-icon,
+#districtManagerLandingContent button > span:first-child {
+  flex: 0 0 56px;
+  width: 56px;
+  min-width: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20px;
+  text-align: center;
+}
+
+#districtManagerLandingContent .action-label,
+#districtManagerLandingContent .menu-label,
+#districtManagerLandingContent button > span:nth-child(2) {
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+@media (max-width: 680px) {
+  #districtManagerLandingContent .action-icon,
+  #districtManagerLandingContent .menu-icon,
+  #districtManagerLandingContent button > span:first-child {
+    flex-basis: 48px;
+    width: 48px;
+    min-width: 48px;
+    margin-right: 16px;
+  }
+}
