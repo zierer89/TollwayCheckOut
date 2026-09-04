@@ -201,3 +201,15 @@ v29 Mechanic Profile Settings:
 - PIN changes and deletions are handled by secure backend functions using the currently authenticated mechanic/PIN.
 - Deleting a mechanic returns to that location's mechanic roster.
 - If the deleted mechanic was the lead mechanic, that location can later assign a new lead mechanic.
+
+v30 Fleet District Managers:
+- Fleet District Managers now has four selectable green manager cards.
+- Exact order: Ted Zubek, Pete Manschula, Mark Fera, Brad Harris.
+- Selecting a manager opens that manager's own landing page.
+
+v31 District Manager Profiles:
+- Fleet District Managers starts empty.
+- + creates a manager using name/password/confirmation.
+- Manager cards are selectable and password locked.
+- Unlocked manager pages include settings to change name, change password, or delete profile.
+- Profiles/password hashes are stored through the shared Supabase backend.

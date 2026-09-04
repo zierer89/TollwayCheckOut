@@ -15,6 +15,14 @@ create table if not exists public.fleet_mechanics (
 create unique index if not exists fleet_mechanics_location_name_unique
   on public.fleet_mechanics (location, lower(name));
 
+create table if not exists public.fleet_district_managers (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  password_hash text not null,
+  created_at timestamptz not null default now()
+);
+alter table public.fleet_district_managers enable row level security;
+
 create table if not exists public.checkout_submissions (
   id uuid primary key default gen_random_uuid(),
   location text not null,
@@ -320,6 +328,32 @@ begin
 end;
 $$;
 
+create or replace function public.create_fleet_district_manager(p_name text,p_password text)
+returns table(id uuid,name text) language plpgsql security definer set search_path=public as $$
+begin
+ if nullif(trim(p_name),'') is null then raise exception 'Manager name is required'; end if;
+ if length(p_password)<4 then raise exception 'Password must be at least 4 characters'; end if;
+ return query insert into public.fleet_district_managers(name,password_hash) values(trim(p_name),crypt(p_password,gen_salt('bf'))) returning fleet_district_managers.id,fleet_district_managers.name;
+end; $$;
+create or replace function public.list_fleet_district_managers()
+returns table(id uuid,name text) language sql security definer set search_path=public as $$ select m.id,m.name from public.fleet_district_managers m order by lower(m.name); $$;
+create or replace function public.verify_fleet_district_manager_password(p_manager_id uuid,p_password text)
+returns boolean language sql security definer set search_path=public as $$ select exists(select 1 from public.fleet_district_managers m where m.id=p_manager_id and m.password_hash=crypt(p_password,m.password_hash)); $$;
+create or replace function public.update_fleet_district_manager_name(p_manager_id uuid,p_password text,p_new_name text)
+returns boolean language plpgsql security definer set search_path=public as $$ begin
+ if nullif(trim(p_new_name),'') is null then raise exception 'Manager name is required'; end if;
+ update public.fleet_district_managers set name=trim(p_new_name) where id=p_manager_id and password_hash=crypt(p_password,password_hash);
+ if not found then raise exception 'Invalid manager or password'; end if; return true; end; $$;
+create or replace function public.change_fleet_district_manager_password(p_manager_id uuid,p_current_password text,p_new_password text)
+returns boolean language plpgsql security definer set search_path=public as $$ begin
+ if length(p_new_password)<4 then raise exception 'Password must be at least 4 characters'; end if;
+ update public.fleet_district_managers set password_hash=crypt(p_new_password,gen_salt('bf')) where id=p_manager_id and password_hash=crypt(p_current_password,password_hash);
+ if not found then raise exception 'Invalid manager or password'; end if; return true; end; $$;
+create or replace function public.delete_fleet_district_manager(p_manager_id uuid,p_password text)
+returns boolean language plpgsql security definer set search_path=public as $$ begin
+ delete from public.fleet_district_managers where id=p_manager_id and password_hash=crypt(p_password,password_hash);
+ if not found then raise exception 'Invalid manager or password'; end if; return true; end; $$;
+
 revoke all on public.fleet_mechanics from anon, authenticated;
 revoke all on public.checkout_submissions from anon, authenticated;
 
@@ -334,3 +368,11 @@ grant execute on function public.sign_off_checkout_sheet(uuid,text,uuid) to anon
 
 grant execute on function public.change_fleet_mechanic_pin(uuid,text,text) to anon, authenticated;
 grant execute on function public.delete_fleet_mechanic(uuid,text) to anon, authenticated;
+
+revoke all on public.fleet_district_managers from anon, authenticated;
+grant execute on function public.create_fleet_district_manager(text,text) to anon, authenticated;
+grant execute on function public.list_fleet_district_managers() to anon, authenticated;
+grant execute on function public.verify_fleet_district_manager_password(uuid,text) to anon, authenticated;
+grant execute on function public.update_fleet_district_manager_name(uuid,text,text) to anon, authenticated;
+grant execute on function public.change_fleet_district_manager_password(uuid,text,text) to anon, authenticated;
+grant execute on function public.delete_fleet_district_manager(uuid,text) to anon, authenticated;

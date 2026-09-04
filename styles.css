@@ -760,3 +760,27 @@ textarea{min-height:120px;resize:vertical}
   font-weight:800;
   cursor:pointer;
 }
+
+/* v30: Fleet District Managers */
+.district-manager-list{grid-template-columns:1fr !important;}
+.district-manager-card{
+  min-height:92px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-weight:800;
+}
+.district-manager-placeholder{
+  margin:0;
+  padding:20px;
+  border-radius:14px;
+  background:#f3f3f3;
+  text-align:center;
+  color:#666;
+}
+
+/* v31 district manager profiles */
+#dmRoster{grid-template-columns:1fr !important;}
+#dmRoster .district-manager-card{min-height:92px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;}
+#dmLockView .mechanic-lock-card{max-width:520px;margin:0 auto;}
