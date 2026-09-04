@@ -606,12 +606,64 @@
     return details;
   }
 
+  const lazyScriptLoads=new Map();
+  const photoMetaCache=new Map();
+  const photoBlobUrlCache=new Map();
+
+  function loadScriptOnce(src,readyCheck){
+    if(readyCheck?.()) return Promise.resolve();
+    if(lazyScriptLoads.has(src)) return lazyScriptLoads.get(src);
+
+    const promise=new Promise((resolve,reject)=>{
+      const existing=[...document.scripts].find(s=>s.src===new URL(src,document.baseURI).href);
+      const script=existing || document.createElement("script");
+
+      const done=()=>{
+        if(!readyCheck || readyCheck()) resolve();
+        else reject(new Error("Required library did not initialize."));
+      };
+
+      if(existing){
+        if(readyCheck?.()) return resolve();
+        existing.addEventListener("load",done,{once:true});
+        existing.addEventListener("error",()=>reject(new Error("Required library could not be loaded.")),{once:true});
+        return;
+      }
+
+      script.src=src;
+      script.async=true;
+      script.onload=done;
+      script.onerror=()=>reject(new Error("Required library could not be loaded."));
+      document.head.appendChild(script);
+    }).catch(err=>{
+      lazyScriptLoads.delete(src);
+      throw err;
+    });
+
+    lazyScriptLoads.set(src,promise);
+    return promise;
+  }
+
+  async function ensureSupabaseStorageLibrary(){
+    await loadScriptOnce(
+      "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
+      ()=>Boolean(window.supabase?.createClient)
+    );
+  }
+
+  async function ensurePdfLibrary(){
+    await loadScriptOnce(
+      "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js",
+      ()=>Boolean(window.jspdf?.jsPDF)
+    );
+  }
+
   let storageClient=null;
 
-  function getStorageClient(){
+  async function getStorageClient(){
     if(storageClient) return storageClient;
+    await ensureSupabaseStorageLibrary();
     const cfg=backendConfig();
-    if(!window.supabase?.createClient) throw new Error("Supabase Storage library did not load.");
     storageClient=window.supabase.createClient(cfg.url,cfg.key,{
       auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
     });
@@ -622,7 +674,7 @@
     const input=form.querySelector('input[type="file"][multiple]');
     if(!input?.files?.length) return [];
 
-    const client=getStorageClient();
+    const client=await getStorageClient();
     const uploaded=[];
 
     for(const file of [...input.files]){
@@ -654,17 +706,44 @@
 
       uploaded.push(objectPath);
     }
+    photoMetaCache.delete(submissionId);
     return uploaded;
   }
 
   async function getSubmissionPhotos(submissionId){
     if(!backendIsConfigured()) return [];
-    const rows=await backendRpc("get_checkout_photos",{p_submission_id:submissionId});
-    return Array.isArray(rows)?rows:[];
+    if(photoMetaCache.has(submissionId)) return photoMetaCache.get(submissionId);
+
+    const request=backendRpc("get_checkout_photos",{p_submission_id:submissionId})
+      .then(rows=>Array.isArray(rows)?rows:[])
+      .catch(err=>{
+        photoMetaCache.delete(submissionId);
+        throw err;
+      });
+
+    photoMetaCache.set(submissionId,request);
+    return request;
+  }
+
+  async function getPrivatePhotoUrl(objectPath){
+    if(photoBlobUrlCache.has(objectPath)) return photoBlobUrlCache.get(objectPath);
+
+    const request=(async()=>{
+      const client=await getStorageClient();
+      const {data,error}=await client.storage.from("checkout-photos").download(objectPath);
+      if(error) throw new Error(`Photo could not be loaded. ${error.message}`);
+      return URL.createObjectURL(data);
+    })().catch(err=>{
+      photoBlobUrlCache.delete(objectPath);
+      throw err;
+    });
+
+    photoBlobUrlCache.set(objectPath,request);
+    return request;
   }
 
   async function fetchPrivatePhoto(objectPath){
-    const client=getStorageClient();
+    const client=await getStorageClient();
     const {data,error}=await client.storage.from("checkout-photos").download(objectPath);
     if(error) throw new Error(`Photo could not be loaded. ${error.message}`);
     return data;
@@ -961,7 +1040,7 @@
     mechanicDayView.classList.add("hidden");
     mechanicSubmissionList.classList.add("hidden");
     mechanicSubmissionEmpty.classList.add("hidden");
-    mechanicCalendarGrid.innerHTML="";
+    mechanicCalendarGrid.innerHTML="";const calendarFrag=document.createDocumentFragment();
 
     if(!mechanicCalendarMonth){
       const p=centralParts(new Date());
@@ -985,7 +1064,7 @@
     for(let i=0;i<first;i++){
       const q=document.createElement("div");
       q.className="calendar-day calendar-blank";
-      mechanicCalendarGrid.appendChild(q);
+      calendarFrag.appendChild(q);
     }
 
     for(let d=1;d<=days;d++){
@@ -1018,8 +1097,9 @@
 
       b.disabled=!c;
       if(c)b.onclick=()=>showMechanicDay(k);
-      mechanicCalendarGrid.appendChild(b);
+      calendarFrag.appendChild(b);
     }
+    mechanicCalendarGrid.appendChild(calendarFrag);
   }
 
   function showMechanicDay(k){
@@ -1087,8 +1167,8 @@
       if(!photos.length){const e=document.createElement("div");e.className="photo-empty";e.textContent="No photos attached.";photoGrid.appendChild(e);return;}
       for(const photo of photos){
         try{
-          const blob=await fetchPrivatePhoto(photo.object_path),url=URL.createObjectURL(blob),img=document.createElement("img");
-          img.src=url;img.alt=photo.file_name||"Checkout photo";img.loading="lazy";img.onclick=()=>window.open(url,"_blank");photoGrid.appendChild(img);
+          const url=await getPrivatePhotoUrl(photo.object_path),img=document.createElement("img");
+          img.src=url;img.alt=photo.file_name||"Checkout photo";img.loading="lazy";img.decoding="async";img.onclick=()=>window.open(url,"_blank");photoGrid.appendChild(img);
         }catch(e){const x=document.createElement("div");x.className="photo-empty";x.textContent="Photo unavailable";photoGrid.appendChild(x);}
       }
     }).catch(()=>{photoGrid.textContent="Photos could not be loaded.";});
@@ -1948,7 +2028,7 @@
     districtManagerCalendarView.classList.remove("hidden");
     districtManagerDayView.classList.add("hidden");
     districtManagerSheetsEmpty.classList.add("hidden");
-    districtManagerCalendarGrid.innerHTML="";
+    districtManagerCalendarGrid.innerHTML="";const calendarFrag=document.createDocumentFragment();
 
     if(!districtManagerCalendarMonth){
       const p=centralParts(new Date());
@@ -1968,7 +2048,7 @@
     for(let i=0;i<first;i++){
       const q=document.createElement("div");
       q.className="calendar-day calendar-blank";
-      districtManagerCalendarGrid.appendChild(q);
+      calendarFrag.appendChild(q);
     }
     for(let d=1;d<=days;d++){
       const k=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
@@ -1979,8 +2059,9 @@
       b.innerHTML=`<strong>${d}</strong><span>${c?c:""}</span>`;
       b.disabled=!c;
       if(c)b.onclick=()=>showDistrictManagerDay(k);
-      districtManagerCalendarGrid.appendChild(b);
+      calendarFrag.appendChild(b);
     }
+    districtManagerCalendarGrid.appendChild(calendarFrag);
   }
 
   function showDistrictManagerDay(k){
@@ -2425,7 +2506,9 @@
       let rows=normalizeManagerSubmissionRows(await getDistrictManagerReviewedSubmissions(selectedDistrictManager.id,activeDistrictManagerPassword));
       rows=rows.filter(item=>{const p=centralParts(item.reviewedAt||item.submittedAt);return p&&p.year===year&&p.month===month;});
       if(!rows.length){districtManagerExportStatus.textContent="No reviewed checkout sheets were found for that month.";return;}
-      const jsPDF=window.jspdf?.jsPDF;if(!jsPDF)throw new Error("PDF library did not load.");
+      await ensurePdfLibrary();
+      const jsPDF=window.jspdf?.jsPDF;
+      if(!jsPDF) throw new Error("PDF library did not load.");
       const doc=new jsPDF({unit:"pt",format:"letter"}),pageW=612,pageH=792,margin=42;
       let y=margin;
       const nextPage=()=>{doc.addPage();y=margin;};
