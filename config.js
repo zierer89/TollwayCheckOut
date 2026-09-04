@@ -1,13 +1,10 @@
 /*
   Illinois Tollway Checkout App - Shared Backend Configuration
+  v45: Connected to the live Supabase project.
 
-  After creating the Supabase project and running supabase-schema.sql,
-  paste the project URL and anon/public key below.
-
-  These values are intended to be used by a browser app. Security is
-  enforced by the database functions and row-level security in the SQL file.
+  Browser-safe values only. Do not place a secret/service_role key here.
 */
 window.TOLLWAY_BACKEND = {
-  SUPABASE_URL: "PASTE_SUPABASE_PROJECT_URL_HERE",
-  SUPABASE_ANON_KEY: "PASTE_SUPABASE_ANON_KEY_HERE"
+  SUPABASE_URL: "https://oeviepfqddhxfokgkbja.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_ieBEypPjHhGw-b_nO7o7tVw_XRLuHwhU"
 };

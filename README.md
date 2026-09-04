@@ -290,3 +290,11 @@ v44 Admin Profile Controls Layout:
 - Reset PIN/Password is now a full-height blue action button with explanatory text.
 - Delete Account is a separated full-height red danger button with a permanent-deletion warning.
 - All existing v43 master-list, reset, deletion, mechanic assignment, mock-profile, and backend behavior is preserved.
+
+
+v45 Live Supabase Connection:
+- Based on the approved v44 baseline.
+- Connected to the live Supabase project at https://oeviepfqddhxfokgkbja.supabase.co.
+- Uses the browser-safe Supabase Publishable key.
+- Local mock profiles are automatically bypassed while the live backend is configured.
+- GitHub Pages remains the front-end host; Supabase provides the shared database/backend.
