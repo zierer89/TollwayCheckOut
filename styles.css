@@ -383,3 +383,14 @@ textarea{min-height:120px;resize:vertical}
 .fleet-location-grid{
   margin-top:18px;
 }
+
+/* v20: Fleet Mechanics locations use the exact green sheet buttons, stacked vertically */
+.fleet-location-grid{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:12px;
+  width:100%;
+}
+.fleet-location-grid .sheet-button{
+  width:100%;
+}

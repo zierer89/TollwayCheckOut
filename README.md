@@ -122,3 +122,8 @@ v19 Fleet Mechanics Location Landing:
   M1, M2, M3, M4, M5, M6, M7, M8, M11, M12, M14, M16, CAG, E02, E06, Sign Shop, Road Electric.
 - Each location button opens a placeholder Fleet Mechanics page for that location, ready for the next functions to be added.
 - All approved v18 content and behavior are preserved.
+
+v20 Fleet Mechanics Stacked Locations:
+- Fleet Mechanics location buttons now remain in one vertical stack on all screen sizes.
+- Each location uses the same green selectable button style as the Checkout Sheets main landing page.
+- All approved v19 behavior and content are preserved.
