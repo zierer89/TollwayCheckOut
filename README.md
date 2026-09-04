@@ -184,3 +184,12 @@ v27 Shared Online Backend:
 - Added config.js and supabase-schema.sql.
 - Truck Checkout routing was also corrected so it now follows the same online location-routing flow as the other implemented forms.
 - Photo file uploads are not yet sent to the online backend; the form data and checklist results are shared now.
+
+v28 Lead Mechanic Review:
+- Add Mechanic now includes a Lead Mechanic option.
+- One lead mechanic maximum is enforced per work location.
+- Lead mechanics are labeled in the location roster.
+- Submitted checkout sheets show Pending Review or Reviewed.
+- All mechanics can view their location's submitted sheets.
+- Only the lead mechanic for that location can sign off a checkout sheet review.
+- Review sign-off stores the lead mechanic and review timestamp in the shared backend.

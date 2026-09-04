@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#118a45" />
   <title>Illinois Tollway Checkout</title>
-  <link rel="stylesheet" href="styles.css?v=31" />
+  <link rel="stylesheet" href="styles.css?v=32" />
 </head>
 <body>
   <main id="app">
@@ -94,6 +94,12 @@
 
             <label for="confirmMechanicPin">Confirm PIN</label>
             <input id="confirmMechanicPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" placeholder="Re-enter PIN" />
+
+            <label class="lead-mechanic-option">
+              <input id="newMechanicIsLead" type="checkbox" />
+              <span>Lead Mechanic</span>
+            </label>
+            <p class="field-help">Only one lead mechanic can be assigned to this work location.</p>
 
             <p id="mechanicAddError" class="form-error hidden"></p>
 
@@ -501,6 +507,6 @@
 </main>
 
   <script src="config.js?v=1"></script>
-  <script src="app.js?v=31"></script>
+  <script src="app.js?v=32"></script>
 </body>
 </html>

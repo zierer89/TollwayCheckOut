@@ -19,6 +19,7 @@
   const newMechanicPin = document.getElementById("newMechanicPin");
   const confirmMechanicPin = document.getElementById("confirmMechanicPin");
   const mechanicAddError = document.getElementById("mechanicAddError");
+  const newMechanicIsLead = document.getElementById("newMechanicIsLead");
   const mechanicLockScreen = document.getElementById("mechanicLockScreen");
   const mechanicLockName = document.getElementById("mechanicLockName");
   const mechanicPinEntry = document.getElementById("mechanicPinEntry");
@@ -467,11 +468,12 @@
     return Array.isArray(rows) ? rows : [];
   }
 
-  async function createMechanic(location,name,pin){
+  async function createMechanic(location,name,pin,isLead){
     return backendRpc("create_fleet_mechanic",{
       p_location:location,
       p_name:name,
-      p_pin:pin
+      p_pin:pin,
+      p_is_lead:Boolean(isLead)
     });
   }
 
@@ -490,6 +492,15 @@
     return Array.isArray(rows) ? rows : [];
   }
 
+  async function signOffSubmission(mechanicId,pin,submissionId){
+    return backendRpc("sign_off_checkout_sheet",{
+      p_mechanic_id:mechanicId,
+      p_pin:pin,
+      p_submission_id:submissionId
+    });
+  }
+
+
   async function renderMechanicRoster(){
     if(!currentFleetLocation) return;
     mechanicList.innerHTML = "";
@@ -503,7 +514,15 @@
         const card = document.createElement("button");
         card.type = "button";
         card.className = "mechanic-card";
-        card.textContent = mechanic.name;
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = mechanic.name;
+        card.appendChild(nameSpan);
+        if(mechanic.is_lead){
+          const badge = document.createElement("span");
+          badge.className = "lead-badge";
+          badge.textContent = "Lead Mechanic";
+          card.appendChild(badge);
+        }
         card.addEventListener("click",()=>showMechanicLock(mechanic));
         mechanicList.appendChild(card);
       });
@@ -526,7 +545,10 @@
         type:row.form_type,
         location:row.location,
         submittedAt:row.submitted_at,
-        details:Array.isArray(row.details) ? row.details : []
+        details:Array.isArray(row.details) ? row.details : [],
+        reviewStatus:row.review_status || "Pending",
+        reviewedByName:row.reviewed_by_name || "",
+        reviewedAt:row.reviewed_at || null
       }));
 
       mechanicSubmissionEmpty.classList.toggle("hidden", items.length > 0);
@@ -538,10 +560,12 @@
         const dt = new Date(item.submittedAt);
         const stamp = isNaN(dt) ? "" : dt.toLocaleString();
         const inspectedBy = item.details?.find(d=>/inspected by|name/i.test(d.key))?.value || "";
-        btn.innerHTML = `<span class="submission-type"></span><span class="submission-meta"></span>`;
+        btn.innerHTML = `<span class="submission-type"></span><span class="submission-meta"></span><span class="review-status"></span>`;
         btn.querySelector(".submission-type").textContent = item.type;
         btn.querySelector(".submission-meta").textContent =
           [inspectedBy, stamp].filter(Boolean).join(" • ");
+        btn.querySelector(".review-status").textContent =
+          item.reviewStatus === "Reviewed" ? "Reviewed" : "Pending Review";
         btn.addEventListener("click",()=>showSubmissionDetail(item));
         mechanicSubmissionList.appendChild(btn);
       });
@@ -582,6 +606,50 @@
       section.appendChild(row);
     });
     card.appendChild(section);
+
+    if(item.reviewStatus === "Reviewed"){
+      const reviewed = document.createElement("div");
+      reviewed.className = "review-complete";
+      const who = item.reviewedByName || "Lead Mechanic";
+      const when = item.reviewedAt ? new Date(item.reviewedAt).toLocaleString() : "";
+      reviewed.innerHTML = "<strong>Review Signed Off</strong>";
+      const detail = document.createElement("span");
+      detail.textContent = [who, when].filter(Boolean).join(" • ");
+      reviewed.appendChild(detail);
+      card.appendChild(reviewed);
+    } else {
+      const reviewPanel = document.createElement("div");
+      reviewPanel.className = "review-panel";
+
+      const note = document.createElement("p");
+      note.className = "review-note";
+
+      if(selectedMechanic?.is_lead){
+        note.textContent = "This checkout sheet is waiting for lead mechanic sign-off.";
+        const signBtn = document.createElement("button");
+        signBtn.type = "button";
+        signBtn.className = "submit-btn";
+        signBtn.textContent = "Sign Off Review";
+        signBtn.addEventListener("click",async()=>{
+          signBtn.disabled = true;
+          try{
+            await signOffSubmission(selectedMechanic.id,activeMechanicPin,item.id);
+            item.reviewStatus = "Reviewed";
+            item.reviewedByName = selectedMechanic.name;
+            item.reviewedAt = new Date().toISOString();
+            showSubmissionDetail(item);
+          }catch(err){
+            alert(err.message);
+            signBtn.disabled = false;
+          }
+        });
+        reviewPanel.append(note,signBtn);
+      }else{
+        note.textContent = "Pending lead mechanic sign-off. Only the lead mechanic for this location can complete the review.";
+        reviewPanel.appendChild(note);
+      }
+      card.appendChild(reviewPanel);
+    }
 
     submissionDetailContent.innerHTML = "";
     submissionDetailContent.appendChild(card);
@@ -1011,6 +1079,7 @@
     newMechanicName.value = "";
     newMechanicPin.value = "";
     confirmMechanicPin.value = "";
+    newMechanicIsLead.checked = false;
     addMechanicPanel.classList.remove("hidden");
     newMechanicName.focus();
   });
@@ -1021,12 +1090,14 @@
     newMechanicName.value = "";
     newMechanicPin.value = "";
     confirmMechanicPin.value = "";
+    newMechanicIsLead.checked = false;
   });
 
   saveMechanicBtn.addEventListener("click",async()=>{
     const name = newMechanicName.value.trim();
     const pin = newMechanicPin.value.trim();
     const confirmPin = confirmMechanicPin.value.trim();
+    const isLead = newMechanicIsLead.checked;
     mechanicAddError.classList.add("hidden");
 
     if(!name){
@@ -1050,16 +1121,20 @@
 
     saveMechanicBtn.disabled = true;
     try{
-      await createMechanic(currentFleetLocation,name,pin);
+      await createMechanic(currentFleetLocation,name,pin,isLead);
       addMechanicPanel.classList.add("hidden");
       newMechanicName.value = "";
       newMechanicPin.value = "";
       confirmMechanicPin.value = "";
+      newMechanicIsLead.checked = false;
       await renderMechanicRoster();
     }catch(err){
-      mechanicAddError.textContent = /duplicate|unique/i.test(err.message)
-        ? "A mechanic with that name already exists at this location."
-        : err.message;
+      mechanicAddError.textContent =
+        /lead mechanic is already assigned/i.test(err.message)
+          ? "This location already has a lead mechanic."
+          : /duplicate|unique/i.test(err.message)
+            ? "A mechanic with that name already exists at this location."
+            : err.message;
       mechanicAddError.classList.remove("hidden");
     }finally{
       saveMechanicBtn.disabled = false;

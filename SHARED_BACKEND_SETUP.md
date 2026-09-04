@@ -31,3 +31,15 @@ The browser does not read the mechanic PIN hash. PIN verification occurs in a Po
 ## Not connected yet
 
 Photo attachments are not uploaded to Supabase Storage in this version. The checkout data, defect comments, repair notes, and checklist statuses are shared online.
+
+## v28 database update
+
+If you already created the Supabase database from v27, run the entire updated `supabase-schema.sql` file again.
+It is written to add the new lead-mechanic and review-signoff fields/functions without deleting existing mechanics or submitted checkout sheets.
+
+### Lead mechanic rules
+- Each work location can have only one Lead Mechanic.
+- The database enforces that rule.
+- All mechanics at the location can open and view submitted checkout sheets after entering their own PIN.
+- Only the Lead Mechanic for that same location can press `Sign Off Review`.
+- Signed reviews store the reviewing lead mechanic and timestamp.
