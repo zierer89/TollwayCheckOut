@@ -376,21 +376,37 @@ textarea{min-height:120px;resize:vertical}
 .fleet-dropdown button{display:block;width:100%;padding:15px 18px;border:0;border-bottom:1px solid #e5e5e5;background:#fff;color:#222;text-align:left;font:inherit;cursor:pointer}
 .fleet-dropdown button:last-child{border-bottom:0}
 
-/* v19 Fleet Mechanics location landing page */
-.fleet-location-content{
-  padding-top:18px;
+
+/* v21: Fleet Mechanics location landing uses the exact Checkout Sheets card layout */
+.fleet-mechanics-wrap{
+  max-width:760px;
 }
-.fleet-location-grid{
-  margin-top:18px;
+.fleet-location-list{
+  grid-template-columns:1fr !important;
+}
+.fleet-location-btn{
+  width:100%;
 }
 
-/* v20: Fleet Mechanics locations use the exact green sheet buttons, stacked vertically */
-.fleet-location-grid{
+/* v22: Fleet Mechanics location cards are text-only */
+.fleet-location-btn{
+  grid-template-columns:1fr auto !important;
+}
+
+/* v23: approved Fleet Mechanics location-card design */
+.fleet-location-list{
   display:grid !important;
   grid-template-columns:1fr !important;
-  gap:12px;
-  width:100%;
+  gap:14px !important;
 }
-.fleet-location-grid .sheet-button{
-  width:100%;
+.fleet-location-btn{
+  width:100% !important;
+  min-height:92px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  text-align:center !important;
+  padding:20px 24px !important;
+  font-size:1.35rem !important;
+  font-weight:800 !important;
 }

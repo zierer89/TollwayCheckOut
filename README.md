@@ -127,3 +127,23 @@ v20 Fleet Mechanics Stacked Locations:
 - Fleet Mechanics location buttons now remain in one vertical stack on all screen sizes.
 - Each location uses the same green selectable button style as the Checkout Sheets main landing page.
 - All approved v19 behavior and content are preserved.
+
+v21 Fleet Mechanics Location Cards:
+- Corrected the Fleet Mechanics landing page to reuse the exact Checkout Sheets landing-page card classes.
+- Each location is displayed as the same large green rounded card with left icon, white text, and right chevron.
+- Location cards are stacked vertically in one column on phone, tablet, and desktop.
+- Intro now matches the main landing-page style: “Select a location to get started.”
+- All approved v20 behavior and prior checkout content are preserved.
+
+v22 Fleet Mechanics Text-Only Location Cards:
+- Removed all left-side images/icons from Fleet Mechanics location cards.
+- Location cards retain the same large green Checkout Sheets landing-page style and right-side chevron.
+- Locations remain stacked vertically in one column.
+
+v23 Fleet Mechanics Large Location Cards:
+- Approved Fleet Mechanics location landing design.
+- Location buttons use large green Checkout Sheets-style cards.
+- No left-side icons.
+- No right-side arrows/chevrons.
+- Location lettering is centered.
+- Cards remain stacked in one column and the page scrolls to reach all locations.
