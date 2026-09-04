@@ -7,6 +7,25 @@
   const sheetTitle = document.getElementById("sheetTitle");
   const utilityPageContent = document.getElementById("utilityPageContent");
   const fleetMechanicsLanding = document.getElementById("fleetMechanicsLanding");
+  const fleetMechanicRoster = document.getElementById("fleetMechanicRoster");
+  const mechanicRosterIntro = document.getElementById("mechanicRosterIntro");
+  const mechanicList = document.getElementById("mechanicList");
+  const mechanicEmptyState = document.getElementById("mechanicEmptyState");
+  const addMechanicBtn = document.getElementById("addMechanicBtn");
+  const addMechanicPanel = document.getElementById("addMechanicPanel");
+  const newMechanicName = document.getElementById("newMechanicName");
+  const saveMechanicBtn = document.getElementById("saveMechanicBtn");
+  const cancelMechanicBtn = document.getElementById("cancelMechanicBtn");
+  const newMechanicPin = document.getElementById("newMechanicPin");
+  const confirmMechanicPin = document.getElementById("confirmMechanicPin");
+  const mechanicAddError = document.getElementById("mechanicAddError");
+  const mechanicLockScreen = document.getElementById("mechanicLockScreen");
+  const mechanicLockName = document.getElementById("mechanicLockName");
+  const mechanicPinEntry = document.getElementById("mechanicPinEntry");
+  const mechanicPinError = document.getElementById("mechanicPinError");
+  const unlockMechanicBtn = document.getElementById("unlockMechanicBtn");
+  const mechanicPersonalScreen = document.getElementById("mechanicPersonalScreen");
+  const mechanicPersonalHeading = document.getElementById("mechanicPersonalHeading");
   const utilityPageHeading = document.getElementById("utilityPageHeading");
   const utilityPageText = document.getElementById("utilityPageText");
   const bottomNav = document.querySelector(".bottom-nav");
@@ -333,6 +352,105 @@
     });
   }
 
+  let currentFleetLocation = null;
+  let selectedMechanic = null;
+  let currentDetailView = "home";
+
+  async function hashPin(pin){
+    const data = new TextEncoder().encode(pin);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  }
+
+  function mechanicsStorageKey(location){
+    return `illinoisTollwayFleetMechanics:${location}`;
+  }
+
+  function getMechanics(location){
+    try{
+      const saved = JSON.parse(localStorage.getItem(mechanicsStorageKey(location)) || "[]");
+      return Array.isArray(saved) ? saved : [];
+    }catch{
+      return [];
+    }
+  }
+
+  function saveMechanics(location, mechanics){
+    localStorage.setItem(mechanicsStorageKey(location), JSON.stringify(mechanics));
+  }
+
+  function renderMechanicRoster(){
+    if(!currentFleetLocation) return;
+    const mechanics = getMechanics(currentFleetLocation);
+    mechanicList.innerHTML = "";
+    mechanicEmptyState.classList.toggle("hidden", mechanics.length > 0);
+
+    mechanics.forEach(mechanic=>{
+      const item = typeof mechanic === "string" ? {name:mechanic,pinHash:""} : mechanic;
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "mechanic-card";
+      card.textContent = item.name;
+      card.addEventListener("click",()=>showMechanicLock(item));
+      mechanicList.appendChild(card);
+    });
+  }
+
+  function showFleetMechanicsLanding(){
+    currentDetailView = "fleetLocations";
+    currentFleetLocation = null;
+    sheetTitle.textContent = "Fleet Mechanics";
+    addMechanicBtn.classList.add("hidden");
+    addMechanicPanel.classList.add("hidden");
+    fleetMechanicRoster.classList.add("hidden");
+    utilityPageContent.classList.add("hidden");
+    fleetMechanicsLanding.classList.remove("hidden");
+    bottomNav.classList.add("hidden");
+    window.scrollTo({top:0,left:0,behavior:"auto"});
+  }
+
+  function showMechanicRoster(location){
+    currentDetailView = "mechanicRoster";
+    currentFleetLocation = location;
+    fleetMechanicsLanding.classList.add("hidden");
+    fleetMechanicRoster.classList.add("hidden");
+    addMechanicBtn.classList.add("hidden");
+    utilityPageContent.classList.add("hidden");
+    fleetMechanicRoster.classList.remove("hidden");
+    addMechanicPanel.classList.add("hidden");
+    addMechanicBtn.classList.remove("hidden");
+    sheetTitle.textContent = location;
+    mechanicRosterIntro.textContent = `Fleet Mechanics - ${location}`;
+    newMechanicName.value = "";
+    renderMechanicRoster();
+    window.scrollTo({top:0,left:0,behavior:"auto"});
+  }
+
+  function showMechanicLock(mechanic){
+    selectedMechanic = mechanic;
+    currentDetailView = "mechanicLock";
+    fleetMechanicRoster.classList.add("hidden");
+    mechanicPersonalScreen.classList.add("hidden");
+    mechanicLockScreen.classList.remove("hidden");
+    addMechanicBtn.classList.add("hidden");
+    sheetTitle.textContent = mechanic.name;
+    mechanicLockName.textContent = mechanic.name;
+    mechanicPinEntry.value = "";
+    mechanicPinError.classList.add("hidden");
+    setTimeout(()=>mechanicPinEntry.focus(),50);
+    window.scrollTo({top:0,left:0,behavior:"auto"});
+  }
+
+  function showMechanicPersonalScreen(){
+    currentDetailView = "mechanicPersonal";
+    mechanicLockScreen.classList.add("hidden");
+    mechanicPersonalScreen.classList.remove("hidden");
+    addMechanicBtn.classList.add("hidden");
+    sheetTitle.textContent = selectedMechanic.name;
+    mechanicPersonalHeading.textContent = selectedMechanic.name;
+    window.scrollTo({top:0,left:0,behavior:"auto"});
+  }
+
   function showHome(){
     splash.classList.add("hidden");
     sheet.classList.add("hidden");
@@ -357,6 +475,12 @@
     sheet.classList.remove("hidden");
     utilityPageContent.classList.add("hidden");
     fleetMechanicsLanding.classList.add("hidden");
+    fleetMechanicRoster.classList.add("hidden");
+    mechanicLockScreen.classList.add("hidden");
+    mechanicPersonalScreen.classList.add("hidden");
+    mechanicLockScreen.classList.add("hidden");
+    mechanicPersonalScreen.classList.add("hidden");
+    addMechanicBtn.classList.add("hidden");
     bottomNav.classList.remove("hidden");
 
     truckForm.classList.add("hidden");
@@ -554,7 +678,15 @@
     btn.addEventListener("click",()=>showSheet(btn.dataset.sheet));
   });
 
-  backBtn.addEventListener("click",showHome);
+  backBtn.addEventListener("click",()=>{
+    if(currentDetailView === "mechanicLock" || currentDetailView === "mechanicPersonal"){
+      showMechanicRoster(currentFleetLocation);
+    } else if(currentDetailView === "mechanicRoster"){
+      showFleetMechanicsLanding();
+    } else {
+      showHome();
+    }
+  });
   homeBtn.addEventListener("click",showHome);
 
 
@@ -610,6 +742,10 @@
 
     utilityPageContent.classList.remove("hidden");
     fleetMechanicsLanding.classList.add("hidden");
+    fleetMechanicRoster.classList.add("hidden");
+    mechanicLockScreen.classList.add("hidden");
+    mechanicPersonalScreen.classList.add("hidden");
+    addMechanicBtn.classList.add("hidden");
     bottomNav.classList.add("hidden");
 
     if(page === "settings"){
@@ -619,9 +755,7 @@
       sheetTitle.textContent = "About"; utilityPageHeading.textContent = "About";
       utilityPageText.innerHTML = "Illinois Tollway Equipment Checkout App<br><br>Mobile app created by Ryan Zierer 2026";
     } else if(page === "mechanics"){
-      sheetTitle.textContent = "Fleet Mechanics";
-      utilityPageContent.classList.add("hidden");
-      fleetMechanicsLanding.classList.remove("hidden");
+      showFleetMechanicsLanding();
     } else if(page === "managers"){
       sheetTitle.textContent = "Fleet District Managers"; utilityPageHeading.textContent = "Fleet District Managers";
       utilityPageText.textContent = "Fleet District Managers content will be added here.";
@@ -631,15 +765,104 @@
   }
 
   document.querySelectorAll("[data-fleet-location]").forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      const location = btn.dataset.fleetLocation;
-      fleetMechanicsLanding.classList.add("hidden");
-      utilityPageContent.classList.remove("hidden");
-      sheetTitle.textContent = `Fleet Mechanics - ${location}`;
-      utilityPageHeading.textContent = location;
-      utilityPageText.textContent = `Fleet Mechanics options for ${location} will be added here.`;
-      window.scrollTo({top:0,behavior:"smooth"});
+    btn.addEventListener("click",()=>showMechanicRoster(btn.dataset.fleetLocation));
+  });
+
+  addMechanicBtn.addEventListener("click",()=>{
+    if(!currentFleetLocation) return;
+    mechanicAddError.classList.add("hidden");
+    newMechanicName.value = "";
+    newMechanicPin.value = "";
+    confirmMechanicPin.value = "";
+    addMechanicPanel.classList.remove("hidden");
+    newMechanicName.focus();
+  });
+
+  cancelMechanicBtn.addEventListener("click",()=>{
+    addMechanicPanel.classList.add("hidden");
+    mechanicAddError.classList.add("hidden");
+    newMechanicName.value = "";
+    newMechanicPin.value = "";
+    confirmMechanicPin.value = "";
+  });
+
+  saveMechanicBtn.addEventListener("click",async()=>{
+    const name = newMechanicName.value.trim();
+    const pin = newMechanicPin.value.trim();
+    const confirmPin = confirmMechanicPin.value.trim();
+    mechanicAddError.classList.add("hidden");
+
+    if(!name){
+      mechanicAddError.textContent = "Enter the mechanic's name.";
+      mechanicAddError.classList.remove("hidden");
+      newMechanicName.focus();
+      return;
+    }
+    if(!/^\d{4,6}$/.test(pin)){
+      mechanicAddError.textContent = "PIN must be 4 to 6 numbers.";
+      mechanicAddError.classList.remove("hidden");
+      newMechanicPin.focus();
+      return;
+    }
+    if(pin !== confirmPin){
+      mechanicAddError.textContent = "PIN entries do not match.";
+      mechanicAddError.classList.remove("hidden");
+      confirmMechanicPin.focus();
+      return;
+    }
+
+    const mechanics = getMechanics(currentFleetLocation).map(m =>
+      typeof m === "string" ? {name:m,pinHash:""} : m
+    );
+    if(mechanics.some(m=>m.name.toLowerCase()===name.toLowerCase())){
+      mechanicAddError.textContent = "A mechanic with that name already exists at this location.";
+      mechanicAddError.classList.remove("hidden");
+      return;
+    }
+
+    mechanics.push({name, pinHash: await hashPin(pin)});
+    saveMechanics(currentFleetLocation, mechanics);
+    addMechanicPanel.classList.add("hidden");
+    newMechanicName.value = "";
+    newMechanicPin.value = "";
+    confirmMechanicPin.value = "";
+    renderMechanicRoster();
+  });
+
+  [newMechanicName,newMechanicPin,confirmMechanicPin].forEach(field=>{
+    field.addEventListener("keydown",(e)=>{
+      if(e.key === "Enter"){
+        e.preventDefault();
+        saveMechanicBtn.click();
+      }
     });
+  });
+
+  unlockMechanicBtn.addEventListener("click",async()=>{
+    if(!selectedMechanic) return;
+    mechanicPinError.classList.add("hidden");
+
+    if(!selectedMechanic.pinHash){
+      mechanicPinError.textContent = "This mechanic does not have a PIN yet.";
+      mechanicPinError.classList.remove("hidden");
+      return;
+    }
+
+    const enteredHash = await hashPin(mechanicPinEntry.value.trim());
+    if(enteredHash !== selectedMechanic.pinHash){
+      mechanicPinError.textContent = "Incorrect PIN. Try again.";
+      mechanicPinError.classList.remove("hidden");
+      mechanicPinEntry.select();
+      return;
+    }
+    showMechanicPersonalScreen();
+  });
+
+  mechanicPinEntry.addEventListener("keydown",(e)=>{
+    if(e.key === "Enter"){
+      e.preventDefault();
+      unlockMechanicBtn.click();
+    }
   });
 
   document.querySelectorAll("[data-fleet-page]").forEach(btn=>{

@@ -147,3 +147,21 @@ v23 Fleet Mechanics Large Location Cards:
 - No right-side arrows/chevrons.
 - Location lettering is centered.
 - Cards remain stacked in one column and the page scrolls to reach all locations.
+
+v24 Fleet Mechanic Rosters:
+- Tapping any Fleet Mechanics location now opens that location's mechanic roster page.
+- The selected work location is shown in the sticky header.
+- A + button appears at the upper-right of the roster page.
+- Tapping + opens an Add Mechanic field.
+- Added mechanics are displayed as large green centered-name cards.
+- Mechanic names are stored separately for each location in the device/browser local storage.
+- Back from a mechanic roster returns to the Fleet Mechanics location landing page; back from the location landing page returns to the main Checkout Sheets screen.
+- Existing checkout sheets and all previously approved behavior remain unchanged.
+
+v25 Mechanic Lock Page:
+- Add Mechanic now requires a name plus a personal 4–6 digit PIN and PIN confirmation.
+- Tapping a mechanic name opens a dedicated lock page.
+- The mechanic's personal landing page cannot be opened until the correct PIN is entered.
+- Incorrect PIN keeps the page locked.
+- PINs are stored as SHA-256 hashes in local device/browser storage rather than plain text.
+- Back from the lock/personal page returns to that location's mechanic roster.

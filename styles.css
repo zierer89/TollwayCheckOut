@@ -410,3 +410,143 @@ textarea{min-height:120px;resize:vertical}
   font-size:1.35rem !important;
   font-weight:800 !important;
 }
+
+/* v24: Fleet Mechanics location rosters */
+.header-add-btn{
+  width:44px;
+  height:44px;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:#fff;
+  font-size:38px;
+  font-weight:400;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  padding:0;
+}
+.header-add-btn:active{background:rgba(255,255,255,.15);}
+
+.mechanic-list{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:14px !important;
+}
+.mechanic-card{
+  width:100%;
+  min-height:92px;
+  border:0;
+  border-radius:18px;
+  background:#118a45;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:20px 24px;
+  font:inherit;
+  font-size:1.35rem;
+  font-weight:800;
+}
+.mechanic-empty-state{
+  margin:18px 0;
+  padding:24px 18px;
+  border-radius:16px;
+  background:#f3f3f3;
+  color:#555;
+  text-align:center;
+  font-weight:600;
+}
+.mechanic-add-panel{
+  margin:18px 0 22px;
+  padding:18px;
+  border-radius:16px;
+  background:#f3f3f3;
+}
+.mechanic-add-panel label{
+  display:block;
+  font-weight:800;
+  margin-bottom:8px;
+}
+.mechanic-add-panel input{
+  width:100%;
+  box-sizing:border-box;
+  min-height:50px;
+  border:1px solid #bbb;
+  border-radius:10px;
+  padding:10px 12px;
+  font:inherit;
+  background:#fff;
+}
+.mechanic-add-actions{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+}
+.mechanic-add-actions .submit-btn,
+.mechanic-add-actions .secondary-btn{
+  flex:1;
+  min-height:48px;
+}
+.secondary-btn{
+  border:1px solid #bbb;
+  border-radius:10px;
+  background:#fff;
+  color:#222;
+  font:inherit;
+  font-weight:700;
+  cursor:pointer;
+}
+
+/* v25: mechanic lock-page access */
+.mechanic-add-panel label:not(:first-child){margin-top:14px;}
+.form-error{margin:10px 0 0;color:#b00020;font-weight:700;}
+.mechanic-card{cursor:pointer;}
+
+.mechanic-lock-wrap{
+  max-width:520px;
+  margin:0 auto;
+  padding-top:36px;
+}
+.mechanic-lock-card{
+  background:#fff;
+  border-radius:18px;
+  padding:28px 22px;
+  box-shadow:0 4px 18px rgba(0,0,0,.12);
+  text-align:center;
+}
+.lock-symbol{
+  font-size:42px;
+  margin-bottom:10px;
+}
+.mechanic-lock-card h2{
+  margin:0 0 8px;
+}
+.mechanic-lock-card p{
+  margin:0 0 18px;
+}
+.mechanic-lock-card label{
+  display:block;
+  text-align:left;
+  font-weight:800;
+  margin-bottom:8px;
+}
+.mechanic-lock-card input{
+  width:100%;
+  box-sizing:border-box;
+  min-height:54px;
+  border:1px solid #bbb;
+  border-radius:10px;
+  padding:12px;
+  font:inherit;
+  font-size:1.2rem;
+  text-align:center;
+  letter-spacing:.25em;
+}
+.mechanic-lock-card .submit-btn{
+  width:100%;
+  margin-top:16px;
+}

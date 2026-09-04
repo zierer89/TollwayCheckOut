@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#118a45" />
   <title>Illinois Tollway Checkout</title>
-  <link rel="stylesheet" href="styles.css?v=27" />
+  <link rel="stylesheet" href="styles.css?v=29" />
 </head>
 <body>
   <main id="app">
@@ -53,7 +53,7 @@
       <header class="topbar detail-bar">
         <button id="backBtn" class="back-btn" type="button">‹</button>
         <h1 id="sheetTitle">Tractor Checkout</h1>
-        <div class="topbar-spacer"></div>
+        <button id="addMechanicBtn" class="header-add-btn hidden" type="button" aria-label="Add mechanic">+</button>
       </header>
 
             <div id="fleetMechanicsLanding" class="hidden">
@@ -78,6 +78,57 @@
           <button type="button" class="checkout-btn fleet-location-btn" data-fleet-location="Sign Shop"><span>Sign Shop</span></button>
           <button type="button" class="checkout-btn fleet-location-btn" data-fleet-location="Road Electric"><span>Road Electric</span></button>
           </div>
+        </div>
+      </div>
+
+      <div id="fleetMechanicRoster" class="hidden">
+        <div class="content-wrap fleet-mechanics-wrap">
+          <p id="mechanicRosterIntro" class="intro">Fleet Mechanics</p>
+
+          <div id="addMechanicPanel" class="mechanic-add-panel hidden">
+            <label for="newMechanicName">Mechanic Name</label>
+            <input id="newMechanicName" type="text" autocomplete="off" placeholder="Enter mechanic name" />
+
+            <label for="newMechanicPin">Create Personal PIN</label>
+            <input id="newMechanicPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" placeholder="4–6 digit PIN" />
+
+            <label for="confirmMechanicPin">Confirm PIN</label>
+            <input id="confirmMechanicPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" placeholder="Re-enter PIN" />
+
+            <p id="mechanicAddError" class="form-error hidden"></p>
+
+            <div class="mechanic-add-actions">
+              <button id="saveMechanicBtn" class="submit-btn" type="button">Add Mechanic</button>
+              <button id="cancelMechanicBtn" class="secondary-btn" type="button">Cancel</button>
+            </div>
+          </div>
+
+          <div id="mechanicEmptyState" class="mechanic-empty-state">
+            No mechanics have been added to this location yet.
+          </div>
+
+          <div id="mechanicList" class="checkout-list mechanic-list"></div>
+        </div>
+      </div>
+
+      <div id="mechanicLockScreen" class="hidden">
+        <div class="content-wrap mechanic-lock-wrap">
+          <div class="mechanic-lock-card">
+            <div class="lock-symbol">🔒</div>
+            <h2 id="mechanicLockName">Mechanic</h2>
+            <p>Enter your personal PIN to continue.</p>
+            <label for="mechanicPinEntry">PIN</label>
+            <input id="mechanicPinEntry" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="Enter PIN" />
+            <p id="mechanicPinError" class="form-error hidden">Incorrect PIN. Try again.</p>
+            <button id="unlockMechanicBtn" class="submit-btn" type="button">Unlock</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="mechanicPersonalScreen" class="hidden">
+        <div class="content-wrap fleet-mechanics-wrap">
+          <p id="mechanicPersonalHeading" class="intro">Mechanic</p>
+          <div class="mechanic-empty-state">This mechanic's personal landing page will be built here next.</div>
         </div>
       </div>
 
@@ -439,6 +490,6 @@
     </section>
 </main>
 
-  <script src="app.js?v=27"></script>
+  <script src="app.js?v=29"></script>
 </body>
 </html>
