@@ -282,3 +282,11 @@ v43 Admin Master User List:
 - Tapping a user opens Admin Profile Controls for credential reset and deletion.
 - Mechanic profiles also allow Admin to change work location and Lead Mechanic assignment.
 - Newly created profiles automatically appear in the Master User List.
+
+v44 Admin Profile Controls Layout:
+- Restyles Admin Profile Controls to the approved spacious layout.
+- Adds a profile identity header with icon, role, and Active/Reset Required badge.
+- Separates mechanic Assignment controls from Account Controls.
+- Reset PIN/Password is now a full-height blue action button with explanatory text.
+- Delete Account is a separated full-height red danger button with a permanent-deletion warning.
+- All existing v43 master-list, reset, deletion, mechanic assignment, mock-profile, and backend behavior is preserved.

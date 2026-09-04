@@ -70,7 +70,7 @@
   const adminScreen=document.getElementById("adminScreen"), adminSetupView=document.getElementById("adminSetupView"), adminLockView=document.getElementById("adminLockView"), adminLandingView=document.getElementById("adminLandingView"), adminMechanicsView=document.getElementById("adminMechanicsView"), adminManagersView=document.getElementById("adminManagersView"), adminResetView=document.getElementById("adminResetView");
   const adminSetupPassword=document.getElementById("adminSetupPassword"), adminSetupConfirmPassword=document.getElementById("adminSetupConfirmPassword"), adminSetupError=document.getElementById("adminSetupError"), createAdminPasswordBtn=document.getElementById("createAdminPasswordBtn");
   const adminPasswordEntry=document.getElementById("adminPasswordEntry"), adminLockError=document.getElementById("adminLockError"), unlockAdminBtn=document.getElementById("unlockAdminBtn");
-  const adminMasterUsersBtn=document.getElementById("adminMasterUsersBtn"), adminMasterUsersView=document.getElementById("adminMasterUsersView"), adminMasterUserList=document.getElementById("adminMasterUserList"), adminUserProfileView=document.getElementById("adminUserProfileView"), adminProfileName=document.getElementById("adminProfileName"), adminProfileRole=document.getElementById("adminProfileRole"), adminMechanicProfileFields=document.getElementById("adminMechanicProfileFields"), adminProfileLocation=document.getElementById("adminProfileLocation"), adminProfileIsLead=document.getElementById("adminProfileIsLead"), adminSaveMechanicProfileBtn=document.getElementById("adminSaveMechanicProfileBtn"), adminProfileStatus=document.getElementById("adminProfileStatus"), adminProfileResetBtn=document.getElementById("adminProfileResetBtn"), adminProfileDeleteBtn=document.getElementById("adminProfileDeleteBtn"), adminProfileError=document.getElementById("adminProfileError");
+  const adminMasterUsersBtn=document.getElementById("adminMasterUsersBtn"), adminMasterUsersView=document.getElementById("adminMasterUsersView"), adminMasterUserList=document.getElementById("adminMasterUserList"), adminUserProfileView=document.getElementById("adminUserProfileView"), adminProfileAvatar=document.getElementById("adminProfileAvatar"), adminProfileName=document.getElementById("adminProfileName"), adminProfileRole=document.getElementById("adminProfileRole"), adminProfileStatusBadge=document.getElementById("adminProfileStatusBadge"), adminAccountControlHelp=document.getElementById("adminAccountControlHelp"), adminResetCredentialHelp=document.getElementById("adminResetCredentialHelp"), adminDeleteAccountHelp=document.getElementById("adminDeleteAccountHelp"), adminMechanicProfileFields=document.getElementById("adminMechanicProfileFields"), adminProfileLocation=document.getElementById("adminProfileLocation"), adminProfileIsLead=document.getElementById("adminProfileIsLead"), adminSaveMechanicProfileBtn=document.getElementById("adminSaveMechanicProfileBtn"), adminProfileStatus=document.getElementById("adminProfileStatus"), adminProfileResetBtn=document.getElementById("adminProfileResetBtn"), adminProfileDeleteBtn=document.getElementById("adminProfileDeleteBtn"), adminProfileError=document.getElementById("adminProfileError");
   let selectedAdminUser=null;
   const adminManageMechanicsBtn=document.getElementById("adminManageMechanicsBtn"), adminManageManagersBtn=document.getElementById("adminManageManagersBtn"), adminResetPasswordBtn=document.getElementById("adminResetPasswordBtn");
   const adminMechanicLocation=document.getElementById("adminMechanicLocation"), adminMechanicName=document.getElementById("adminMechanicName"), adminMechanicPin=document.getElementById("adminMechanicPin"), adminMechanicConfirmPin=document.getElementById("adminMechanicConfirmPin"), adminMechanicIsLead=document.getElementById("adminMechanicIsLead"), adminMechanicError=document.getElementById("adminMechanicError"), adminAddMechanicBtn=document.getElementById("adminAddMechanicBtn"), adminMechanicList=document.getElementById("adminMechanicList");
@@ -1107,11 +1107,17 @@
     selectedAdminUser=user; currentDetailView="adminUserProfile";
     showAdminSubView(adminUserProfileView,"Admin Profile Controls");
     adminProfileName.textContent=user.name;
-    adminProfileRole.textContent=user._type==="mechanic"?"Fleet Mechanic":"Fleet District Manager";
-    adminProfileStatus.textContent=user.reset_required?"Status: Reset Required":"Status: Active";
-    adminMechanicProfileFields.classList.toggle("hidden",user._type!=="mechanic");
-    if(user._type==="mechanic"){adminProfileLocation.value=user.location;adminProfileIsLead.checked=Boolean(user.is_lead);}
-    adminProfileResetBtn.textContent=user._type==="mechanic"?"Reset PIN":"Reset Password";
+    const isMechanic=user._type==="mechanic";
+    adminProfileRole.textContent=isMechanic?"Fleet Mechanic":"Fleet District Manager";
+    adminProfileAvatar.textContent=isMechanic?"🔧":"👤";
+    adminProfileStatus.textContent=user.reset_required?"Reset Required":"Active";
+    adminProfileStatusBadge.classList.toggle("reset-required",Boolean(user.reset_required));
+    adminMechanicProfileFields.classList.toggle("hidden",!isMechanic);
+    if(isMechanic){adminProfileLocation.value=user.location;adminProfileIsLead.checked=Boolean(user.is_lead);}
+    adminProfileResetBtn.innerHTML=isMechanic?"<span>🔑</span><span>Reset PIN</span>":"<span>🔑</span><span>Reset Password</span>";
+    adminAccountControlHelp.textContent=isMechanic?"Reset the PIN or remove this account. Changes take effect immediately.":"Reset the password or remove this account. Changes take effect immediately.";
+    adminResetCredentialHelp.textContent=isMechanic?`This will allow ${user.name} to create a new PIN at next login.`:`This will allow ${user.name} to create a new password at next login.`;
+    adminDeleteAccountHelp.textContent=`This will permanently remove ${user.name}'s account. This action cannot be undone.`;
     adminProfileError.classList.add("hidden");
   }
 
@@ -2159,7 +2165,7 @@
       }else{
         code=backendIsConfigured()?await backendRpc("admin_reset_fleet_district_manager_password",{p_admin_password:activeAdminPassword,p_manager_id:selectedAdminUser.id}):(()=>{const c=createLocalReset("manager",selectedAdminUser.id),rows=localManagers(),i=rows.findIndex(x=>x.id===selectedAdminUser.id);if(i>=0){rows[i].reset_required=true;saveLocalProfiles(LOCAL_MANAGERS_KEY,rows);}return c;})();
       }
-      selectedAdminUser.reset_required=true;adminProfileStatus.textContent="Status: Reset Required";
+      selectedAdminUser.reset_required=true;adminProfileStatus.textContent="Reset Required";adminProfileStatusBadge.classList.add("reset-required");
       alert(`Temporary reset code for ${selectedAdminUser.name}: ${code}`);
     }catch(e){adminProfileError.textContent=e.message;adminProfileError.classList.remove("hidden");}
   };

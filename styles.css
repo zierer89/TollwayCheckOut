@@ -802,3 +802,37 @@ textarea{min-height:120px;resize:vertical}
 
 /* v43 Admin master user list */
 .master-user-card{width:100%;border:0;border-radius:16px;background:#118a45;color:#fff;display:grid;grid-template-columns:1fr 34px;grid-template-rows:auto auto;text-align:left;padding:18px 20px;margin-bottom:12px}.master-user-name{font-size:20px;font-weight:800}.master-user-meta{font-size:14px;opacity:.9;margin-top:4px}.master-user-arrow{grid-column:2;grid-row:1/3;align-self:center;font-size:34px}.admin-user-profile-card{background:#fff;border:1px solid #e5e5e5;border-radius:18px;padding:20px;box-shadow:0 6px 22px rgba(0,0,0,.06)}.admin-profile-control-stack{display:grid;gap:12px;margin-top:18px}.admin-profile-control-stack button{width:100%;margin:0}
+
+/* v44 Admin Profile Controls approved layout */
+.admin-user-profile-card-v44{padding:28px 24px;border-radius:22px}
+.admin-profile-identity{display:flex;align-items:center;gap:24px;padding-bottom:28px;border-bottom:1px solid #e1e1e1}
+.admin-profile-avatar{width:104px;height:104px;border-radius:50%;background:#118a45;color:#fff;display:flex;align-items:center;justify-content:center;font-size:48px;flex:0 0 auto}
+.admin-profile-identity h2{font-size:34px;line-height:1.05;margin:0 0 8px;color:#111}
+.admin-profile-role{font-size:20px;color:#6f6f6f;margin:0 0 12px}
+.admin-profile-status-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:#e4f4e9;color:#118a45;font-size:16px;font-weight:700}
+.admin-profile-status-badge .status-dot{width:10px;height:10px;border-radius:50%;background:#35b56a}
+.admin-profile-status-badge.reset-required{background:#fff0d8;color:#a76600}
+.admin-profile-status-badge.reset-required .status-dot{background:#f0a11a}
+.admin-profile-section{padding-top:28px}
+.admin-profile-section+.admin-profile-section{margin-top:28px;border-top:1px solid #e1e1e1}
+.admin-profile-section-heading{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.admin-profile-section-heading .section-icon{font-size:26px}
+.admin-profile-section-heading h3{font-size:24px;margin:0;color:#111}
+.admin-user-profile-card-v44 label{font-size:18px;color:#6f6f6f}
+.admin-user-profile-card-v44 select{min-height:58px;font-size:20px;margin-top:7px}
+.admin-lead-option{margin:18px 0 20px;color:#111!important;font-size:20px!important;font-weight:700}
+.admin-lead-option input{width:28px;height:28px}
+.admin-profile-main-btn{min-height:68px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:20px}
+.account-control-help{font-size:17px;color:#6f6f6f;line-height:1.4;margin:0 0 22px}
+.admin-reset-credential-btn,.admin-delete-account-btn{width:100%;min-height:68px;border:0;border-radius:14px;color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:12px}
+.admin-reset-credential-btn{background:#1677e8}
+.admin-delete-account-btn{background:#c90024;margin-top:22px}
+.admin-action-help{text-align:center;color:#747474;font-size:15px;line-height:1.35;margin:8px 10px 0}
+.danger-help{margin-bottom:0}
+@media(max-width:680px){
+  .admin-user-profile-card-v44{padding:22px 18px}
+  .admin-profile-identity{gap:18px}
+  .admin-profile-avatar{width:88px;height:88px;font-size:40px}
+  .admin-profile-identity h2{font-size:30px}
+  .admin-profile-role{font-size:18px}
+}
