@@ -882,6 +882,15 @@
     return backendRpc("sign_off_checkout_sheet",{p_mechanic_id:mechanicId,p_pin:pin,p_submission_id:submissionId});
   }
 
+  async function deleteCheckoutSubmissionAsLead(mechanicId,pin,submissionId){
+    if(!backendIsConfigured()) throw new Error("Shared submission testing requires Supabase.");
+    return backendRpc("delete_checkout_sheet_as_lead",{
+      p_mechanic_id:mechanicId,
+      p_pin:pin,
+      p_submission_id:submissionId
+    });
+  }
+
   async function changeMechanicPinOnline(mechanicId,currentPin,newPin){
     if(!backendIsConfigured()){
       const rows=localMechanics(), i=rows.findIndex(x=>x.id===mechanicId);
@@ -1130,7 +1139,7 @@
   }
   async function renderSubmissionInbox(){if(!currentFleetLocation||!selectedMechanic||!activeMechanicPin)return;mechanicInboxLocation.textContent=`Submitted sheets for ${currentFleetLocation}`;try{mechanicSubmissionItems=normalizeSubmissionRows(await getMechanicSubmissions(selectedMechanic.id,activeMechanicPin));const latest=mechanicSubmissionItems.map(x=>centralParts(x.submittedAt)).filter(Boolean).sort((a,b)=>(b.year-a.year)||(b.month-a.month)||(b.day-a.day))[0],p=latest||centralParts(new Date());mechanicCalendarMonth=new Date(Date.UTC(p.year,p.month-1,1,12));renderMechanicCalendar();}catch(e){mechanicCalendarView.classList.add("hidden");mechanicSubmissionEmpty.classList.remove("hidden");mechanicSubmissionEmpty.textContent=e.message;}}
 
-  function showSubmissionDetail(item){
+  function showSubmissionDetail(item,mechanicContext=true){
     currentDetailView = "submissionDetail";
     mechanicSettingsBtn.classList.add("hidden");
     mechanicPersonalScreen.classList.add("hidden");
@@ -1197,7 +1206,7 @@
       const note = document.createElement("p");
       note.className = "review-note";
 
-      if(selectedMechanic?.is_lead){
+      if(mechanicContext && selectedMechanic?.is_lead){
         note.textContent = "This checkout sheet is waiting for lead mechanic sign-off.";
         const signBtn = document.createElement("button");
         signBtn.type = "button";
@@ -1222,6 +1231,62 @@
         reviewPanel.appendChild(note);
       }
       card.appendChild(reviewPanel);
+    }
+
+    if(mechanicContext && selectedMechanic?.is_lead){
+      const deleteWrap=document.createElement("div");
+      deleteWrap.className="delete-checkout-wrap";
+
+      const deleteBtn=document.createElement("button");
+      deleteBtn.type="button";
+      deleteBtn.className="delete-checkout-btn";
+      deleteBtn.textContent="Delete Checkout Sheet";
+
+      deleteBtn.addEventListener("click",async()=>{
+        const confirmed=window.confirm(
+          "Are you sure you want to permanently delete this checkout sheet? This cannot be undone."
+        );
+        if(!confirmed) return;
+
+        deleteBtn.disabled=true;
+        deleteBtn.textContent="Deleting…";
+
+        try{
+          await deleteCheckoutSubmissionAsLead(
+            selectedMechanic.id,
+            activeMechanicPin,
+            item.id
+          );
+
+          mechanicSubmissionItems=mechanicSubmissionItems.filter(x=>x.id!==item.id);
+          photoMetaCache.delete(item.id);
+
+          mechanicSubmissionDetail.classList.add("hidden");
+          mechanicPersonalScreen.classList.remove("hidden");
+
+          if(selectedMechanicDateKey){
+            const remainingForDay=mechanicSubmissionItems.filter(
+              x=>centralKey(x.submittedAt)===selectedMechanicDateKey
+            );
+
+            if(remainingForDay.length){
+              showMechanicDay(selectedMechanicDateKey);
+            }else{
+              selectedMechanicDateKey=null;
+              renderMechanicCalendar();
+            }
+          }else{
+            renderMechanicCalendar();
+          }
+        }catch(err){
+          alert(`Checkout sheet could not be deleted. ${err.message}`);
+          deleteBtn.disabled=false;
+          deleteBtn.textContent="Delete Checkout Sheet";
+        }
+      });
+
+      deleteWrap.appendChild(deleteBtn);
+      card.appendChild(deleteWrap);
     }
 
     submissionDetailContent.innerHTML = "";
@@ -2128,7 +2193,7 @@
 
   function showDistrictManagerSubmissionDetail(item){
     districtManagerPersonalScreen.classList.add("hidden");
-    showSubmissionDetail(item);
+    showSubmissionDetail(item,false);
     currentDetailView="districtManagerSubmissionDetail";
   }
 
