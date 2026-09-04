@@ -6,6 +6,7 @@
   const homeBtn = document.getElementById("homeBtn");
   const sheetTitle = document.getElementById("sheetTitle");
   const utilityPageContent = document.getElementById("utilityPageContent");
+  const fleetMechanicsLanding = document.getElementById("fleetMechanicsLanding");
   const utilityPageHeading = document.getElementById("utilityPageHeading");
   const utilityPageText = document.getElementById("utilityPageText");
   const bottomNav = document.querySelector(".bottom-nav");
@@ -337,6 +338,7 @@
     sheet.classList.add("hidden");
     home.classList.remove("hidden");
     utilityPageContent.classList.add("hidden");
+    fleetMechanicsLanding.classList.add("hidden");
     placeholderContent.classList.remove("hidden");
     bottomNav.classList.remove("hidden");
     window.scrollTo(0,0);
@@ -354,6 +356,7 @@
     home.classList.add("hidden");
     sheet.classList.remove("hidden");
     utilityPageContent.classList.add("hidden");
+    fleetMechanicsLanding.classList.add("hidden");
     bottomNav.classList.remove("hidden");
 
     truckForm.classList.add("hidden");
@@ -606,6 +609,7 @@
     placeholderContent.classList.add("hidden");
 
     utilityPageContent.classList.remove("hidden");
+    fleetMechanicsLanding.classList.add("hidden");
     bottomNav.classList.add("hidden");
 
     if(page === "settings"){
@@ -615,8 +619,9 @@
       sheetTitle.textContent = "About"; utilityPageHeading.textContent = "About";
       utilityPageText.innerHTML = "Illinois Tollway Equipment Checkout App<br><br>Mobile app created by Ryan Zierer 2026";
     } else if(page === "mechanics"){
-      sheetTitle.textContent = "Fleet Mechanics"; utilityPageHeading.textContent = "Fleet Mechanics";
-      utilityPageText.textContent = "Fleet Mechanics content will be added here.";
+      sheetTitle.textContent = "Fleet Mechanics";
+      utilityPageContent.classList.add("hidden");
+      fleetMechanicsLanding.classList.remove("hidden");
     } else if(page === "managers"){
       sheetTitle.textContent = "Fleet District Managers"; utilityPageHeading.textContent = "Fleet District Managers";
       utilityPageText.textContent = "Fleet District Managers content will be added here.";
@@ -624,6 +629,18 @@
 
     window.scrollTo({top:0,left:0,behavior:"auto"});
   }
+
+  document.querySelectorAll("[data-fleet-location]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const location = btn.dataset.fleetLocation;
+      fleetMechanicsLanding.classList.add("hidden");
+      utilityPageContent.classList.remove("hidden");
+      sheetTitle.textContent = `Fleet Mechanics - ${location}`;
+      utilityPageHeading.textContent = location;
+      utilityPageText.textContent = `Fleet Mechanics options for ${location} will be added here.`;
+      window.scrollTo({top:0,behavior:"smooth"});
+    });
+  });
 
   document.querySelectorAll("[data-fleet-page]").forEach(btn=>{
     btn.addEventListener("click",()=>{ closeMainFleetMenu(); showUtilityPage(btn.dataset.fleetPage); });

@@ -375,3 +375,11 @@ textarea{min-height:120px;resize:vertical}
 .fleet-dropdown{position:absolute;left:0;top:50px;min-width:230px;background:#fff;border-radius:10px;box-shadow:0 5px 18px rgba(0,0,0,.22);overflow:hidden;z-index:2000}
 .fleet-dropdown button{display:block;width:100%;padding:15px 18px;border:0;border-bottom:1px solid #e5e5e5;background:#fff;color:#222;text-align:left;font:inherit;cursor:pointer}
 .fleet-dropdown button:last-child{border-bottom:0}
+
+/* v19 Fleet Mechanics location landing page */
+.fleet-location-content{
+  padding-top:18px;
+}
+.fleet-location-grid{
+  margin-top:18px;
+}

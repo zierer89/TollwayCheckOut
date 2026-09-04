@@ -114,3 +114,11 @@ v18 Fleet Menu:
 - Second selection: Fleet District Managers.
 - Both open labeled pages using the existing sticky header/back-arrow navigation.
 - All approved v17 content remains unchanged.
+
+v19 Fleet Mechanics Location Landing:
+- Fleet Mechanics now opens to a location-selection landing page.
+- Uses the same button/card style as the main Checkout Sheets landing page.
+- Location order matches the approved checkout location menu exactly:
+  M1, M2, M3, M4, M5, M6, M7, M8, M11, M12, M14, M16, CAG, E02, E06, Sign Shop, Road Electric.
+- Each location button opens a placeholder Fleet Mechanics page for that location, ready for the next functions to be added.
+- All approved v18 content and behavior are preserved.
