@@ -6,5 +6,5 @@
 */
 window.TOLLWAY_BACKEND = {
   SUPABASE_URL: "https://oeviepfqddhxfokgkbja.supabase.co",
-  SUPABASE_ANON_KEY: "sb_publishable_ieBEypPjHhGw-b_nO7o7tVw_XRLuHwhU"
+  SUPABASE_ANON_KEY: "sb_publishable_ieBEypPjHhGwb_nO7o7tVw_XRLuHwhU"
 };
