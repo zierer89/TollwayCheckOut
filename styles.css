@@ -1137,58 +1137,8 @@ textarea{min-height:120px;resize:vertical}
 }
 
 
-/* v56.2 - Fleet District Manager landing buttons
-   Directly override the existing grid layout on the two real buttons. */
-#districtManagerViewSheetsBtn,
+/* v56.3 - District Manager landing page:
+   keep existing button/icon layout; only increase space between buttons */
 #districtManagerExportPdfBtn{
-  grid-template-columns:72px minmax(0,1fr) 32px;
-  column-gap:18px;
-  padding:14px 22px;
-}
-
-#districtManagerViewSheetsBtn > span:first-child,
-#districtManagerExportPdfBtn > span:first-child{
-  width:72px;
-  min-width:72px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin:0;
-  text-align:center;
-  justify-self:center;
-}
-
-#districtManagerViewSheetsBtn > span:nth-child(2),
-#districtManagerExportPdfBtn > span:nth-child(2){
-  margin:0;
-  text-align:left;
-  justify-self:stretch;
-}
-
-#districtManagerViewSheetsBtn > span:last-child,
-#districtManagerExportPdfBtn > span:last-child{
-  margin:0;
-  width:32px;
-  text-align:right;
-  justify-self:end;
-}
-
-@media (max-width:680px){
-  #districtManagerViewSheetsBtn,
-  #districtManagerExportPdfBtn{
-    grid-template-columns:60px minmax(0,1fr) 28px;
-    column-gap:14px;
-    padding:12px 18px;
-  }
-
-  #districtManagerViewSheetsBtn > span:first-child,
-  #districtManagerExportPdfBtn > span:first-child{
-    width:60px;
-    min-width:60px;
-  }
-
-  #districtManagerViewSheetsBtn > span:last-child,
-  #districtManagerExportPdfBtn > span:last-child{
-    width:28px;
-  }
+  margin-top:18px;
 }
