@@ -222,3 +222,9 @@ v33 Admin Profile Management:
 - Admin creates/deletes mechanic and district-manager profiles.
 - Mechanics retain Change PIN only.
 - District Managers retain Change Password only.
+
+v34 Local Admin Testing:
+- Admin password setup/unlock/reset now works before Supabase is configured.
+- During local testing the Admin password is stored only in this browser/device using localStorage.
+- Once Supabase URL/key are configured, Admin credentials automatically use the shared backend instead.
+- This local fallback is for development/testing only; it is not the final shared-device security model.

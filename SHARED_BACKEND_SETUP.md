@@ -59,3 +59,6 @@ Run the full updated `supabase-schema.sql` when Supabase is available. It adds t
 
 ## v33 Admin
 Run the full updated supabase-schema.sql. It adds the Admin password singleton and Admin delete RPCs.
+
+## v34 local Admin testing
+Before Supabase is configured, Admin password setup, unlock, and reset use browser localStorage so the Admin UI can be tested. After Supabase is configured, the app uses the server-side Admin password RPCs instead.

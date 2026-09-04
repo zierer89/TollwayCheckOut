@@ -736,6 +736,33 @@
     window.scrollTo({top:0,left:0,behavior:"auto"});
   }
 
+  const LOCAL_ADMIN_PASSWORD_KEY = "tollway_admin_password_v34";
+
+  function backendIsConfigured(){
+    const cfg = backendConfig();
+    return Boolean(cfg && cfg.url && cfg.key);
+  }
+
+  function localAdminPasswordExists(){
+    return Boolean(localStorage.getItem(LOCAL_ADMIN_PASSWORD_KEY));
+  }
+
+  function createLocalAdminPassword(password){
+    if(localAdminPasswordExists()) throw new Error("Admin password has already been created.");
+    localStorage.setItem(LOCAL_ADMIN_PASSWORD_KEY,password);
+    return true;
+  }
+
+  function verifyLocalAdminPassword(password){
+    return localStorage.getItem(LOCAL_ADMIN_PASSWORD_KEY) === password;
+  }
+
+  function resetLocalAdminPassword(currentPassword,newPassword){
+    if(!verifyLocalAdminPassword(currentPassword)) throw new Error("Incorrect Admin password.");
+    localStorage.setItem(LOCAL_ADMIN_PASSWORD_KEY,newPassword);
+    return true;
+  }
+
   function hideAdminViews(){
     adminScreen.classList.add("hidden");
     [adminSetupView,adminLockView,adminLandingView,adminMechanicsView,adminManagersView,adminResetView].forEach(v=>v.classList.add("hidden"));
@@ -749,13 +776,39 @@
   async function showAdmin(){
     currentDetailView="admin";
     hideDistrictManagerViews();
-    fleetMechanicsLanding.classList.add("hidden"); fleetMechanicRoster.classList.add("hidden"); mechanicLockScreen.classList.add("hidden"); mechanicPersonalScreen.classList.add("hidden"); mechanicSubmissionDetail.classList.add("hidden"); utilityPageContent.classList.add("hidden"); placeholderContent.classList.add("hidden");
+    fleetMechanicsLanding.classList.add("hidden");
+    fleetMechanicRoster.classList.add("hidden");
+    mechanicLockScreen.classList.add("hidden");
+    mechanicPersonalScreen.classList.add("hidden");
+    mechanicSubmissionDetail.classList.add("hidden");
+    utilityPageContent.classList.add("hidden");
+    placeholderContent.classList.add("hidden");
     activeAdminPassword="";
+
+    if(!backendIsConfigured()){
+      if(localAdminPasswordExists()){
+        showAdminSubView(adminLockView,"Admin");
+        adminPasswordEntry.value="";
+      }else{
+        showAdminSubView(adminSetupView,"Admin Setup");
+        adminSetupError.classList.add("hidden");
+      }
+      return;
+    }
+
     try{
       const exists=await backendRpc("admin_password_exists",{});
-      if(exists===true){ showAdminSubView(adminLockView,"Admin"); adminPasswordEntry.value=""; }
-      else showAdminSubView(adminSetupView,"Admin Setup");
-    }catch(e){ showAdminSubView(adminSetupView,"Admin Setup"); adminSetupError.textContent=e.message; adminSetupError.classList.remove("hidden"); }
+      if(exists===true){
+        showAdminSubView(adminLockView,"Admin");
+        adminPasswordEntry.value="";
+      }else{
+        showAdminSubView(adminSetupView,"Admin Setup");
+      }
+    }catch(e){
+      showAdminSubView(adminSetupView,"Admin Setup");
+      adminSetupError.textContent=e.message;
+      adminSetupError.classList.remove("hidden");
+    }
   }
 
   async function renderAdminMechanics(){
@@ -1601,15 +1654,72 @@
     }
   });
 
-  createAdminPasswordBtn.onclick=async()=>{const p=adminSetupPassword.value,c=adminSetupConfirmPassword.value;adminSetupError.classList.add("hidden");if(p.length<6||p!==c){adminSetupError.textContent=p.length<6?"Admin password must be at least 6 characters.":"Passwords do not match.";adminSetupError.classList.remove("hidden");return;}try{await backendRpc("create_admin_password",{p_password:p});activeAdminPassword=p;currentDetailView="adminLanding";showAdminSubView(adminLandingView,"Admin");}catch(e){adminSetupError.textContent=e.message;adminSetupError.classList.remove("hidden");}};
-  unlockAdminBtn.onclick=async()=>{const p=adminPasswordEntry.value;adminLockError.classList.add("hidden");try{const ok=await backendRpc("verify_admin_password",{p_password:p});if(ok!==true){adminLockError.textContent="Incorrect Admin password.";adminLockError.classList.remove("hidden");return;}activeAdminPassword=p;currentDetailView="adminLanding";showAdminSubView(adminLandingView,"Admin");}catch(e){adminLockError.textContent=e.message;adminLockError.classList.remove("hidden");}};
+  createAdminPasswordBtn.onclick=async()=>{
+    const p=adminSetupPassword.value,c=adminSetupConfirmPassword.value;
+    adminSetupError.classList.add("hidden");
+    if(p.length<6||p!==c){
+      adminSetupError.textContent=p.length<6?"Admin password must be at least 6 characters.":"Passwords do not match.";
+      adminSetupError.classList.remove("hidden");
+      return;
+    }
+    try{
+      if(backendIsConfigured()) await backendRpc("create_admin_password",{p_password:p});
+      else createLocalAdminPassword(p);
+      activeAdminPassword=p;
+      currentDetailView="adminLanding";
+      showAdminSubView(adminLandingView,"Admin");
+    }catch(e){
+      adminSetupError.textContent=e.message;
+      adminSetupError.classList.remove("hidden");
+    }
+  };
+
+  unlockAdminBtn.onclick=async()=>{
+    const p=adminPasswordEntry.value;
+    adminLockError.classList.add("hidden");
+    try{
+      const ok=backendIsConfigured()
+        ? await backendRpc("verify_admin_password",{p_password:p})
+        : verifyLocalAdminPassword(p);
+      if(ok!==true){
+        adminLockError.textContent="Incorrect Admin password.";
+        adminLockError.classList.remove("hidden");
+        return;
+      }
+      activeAdminPassword=p;
+      currentDetailView="adminLanding";
+      showAdminSubView(adminLandingView,"Admin");
+    }catch(e){
+      adminLockError.textContent=e.message;
+      adminLockError.classList.remove("hidden");
+    }
+  };
   adminManageMechanicsBtn.onclick=()=>{currentDetailView="adminMechanics";showAdminSubView(adminMechanicsView,"Manage Fleet Mechanics");renderAdminMechanics();};
   adminManageManagersBtn.onclick=()=>{currentDetailView="adminManagers";showAdminSubView(adminManagersView,"Manage District Managers");renderAdminManagers();};
   adminResetPasswordBtn.onclick=()=>{currentDetailView="adminReset";adminNewPassword.value="";adminConfirmNewPassword.value="";showAdminSubView(adminResetView,"Reset Admin Password");};
   adminMechanicLocation.onchange=renderAdminMechanics;
   adminAddMechanicBtn.onclick=async()=>{const loc=adminMechanicLocation.value,n=adminMechanicName.value.trim(),p=adminMechanicPin.value,c=adminMechanicConfirmPin.value;adminMechanicError.classList.add("hidden");if(!loc||!n||!/^\d{4,6}$/.test(p)||p!==c){adminMechanicError.textContent=!loc?"Select a work location.":!n?"Enter the mechanic name.":!/^\d{4,6}$/.test(p)?"PIN must be 4–6 digits.":"PINs do not match.";adminMechanicError.classList.remove("hidden");return;}try{await createMechanic(loc,n,p,adminMechanicIsLead.checked);adminMechanicName.value="";adminMechanicPin.value="";adminMechanicConfirmPin.value="";adminMechanicIsLead.checked=false;renderAdminMechanics();}catch(e){adminMechanicError.textContent=e.message;adminMechanicError.classList.remove("hidden");}};
   adminAddManagerBtn.onclick=async()=>{const n=adminManagerName.value.trim(),p=adminManagerPassword.value,c=adminManagerConfirmPassword.value;adminManagerError.classList.add("hidden");if(!n||p.length<4||p!==c){adminManagerError.textContent=!n?"Enter the district manager name.":p.length<4?"Password must be at least 4 characters.":"Passwords do not match.";adminManagerError.classList.remove("hidden");return;}try{await createDistrictManager(n,p);adminManagerName.value="";adminManagerPassword.value="";adminManagerConfirmPassword.value="";renderAdminManagers();}catch(e){adminManagerError.textContent=e.message;adminManagerError.classList.remove("hidden");}};
-  saveAdminPasswordBtn.onclick=async()=>{const p=adminNewPassword.value,c=adminConfirmNewPassword.value;adminResetError.classList.add("hidden");if(p.length<6||p!==c){adminResetError.textContent=p.length<6?"Admin password must be at least 6 characters.":"Passwords do not match.";adminResetError.classList.remove("hidden");return;}try{await backendRpc("reset_admin_password",{p_current_password:activeAdminPassword,p_new_password:p});activeAdminPassword=p;alert("Admin password reset successfully.");currentDetailView="adminLanding";showAdminSubView(adminLandingView,"Admin");}catch(e){adminResetError.textContent=e.message;adminResetError.classList.remove("hidden");}};
+  saveAdminPasswordBtn.onclick=async()=>{
+    const p=adminNewPassword.value,c=adminConfirmNewPassword.value;
+    adminResetError.classList.add("hidden");
+    if(p.length<6||p!==c){
+      adminResetError.textContent=p.length<6?"Admin password must be at least 6 characters.":"Passwords do not match.";
+      adminResetError.classList.remove("hidden");
+      return;
+    }
+    try{
+      if(backendIsConfigured()) await backendRpc("reset_admin_password",{p_current_password:activeAdminPassword,p_new_password:p});
+      else resetLocalAdminPassword(activeAdminPassword,p);
+      activeAdminPassword=p;
+      alert("Admin password reset successfully.");
+      currentDetailView="adminLanding";
+      showAdminSubView(adminLandingView,"Admin");
+    }catch(e){
+      adminResetError.textContent=e.message;
+      adminResetError.classList.remove("hidden");
+    }
+  };
 
   document.querySelectorAll("[data-fleet-page]").forEach(btn=>{
     btn.addEventListener("click",()=>{ closeMainFleetMenu(); showUtilityPage(btn.dataset.fleetPage); });
