@@ -504,6 +504,9 @@
   let currentDetailView = "home";
 
   let activeMechanicPin = "";
+  let mechanicSubmissionItems=[];
+  let mechanicCalendarMonth=null;
+  let selectedMechanicDateKey=null;
   let selectedDistrictManager = null;
   let activeDistrictManagerPassword = "";
   let activeAdminPassword = "";
@@ -805,48 +808,28 @@
     }
   }
 
-  async function renderSubmissionInbox(){
-    if(!currentFleetLocation || !selectedMechanic || !activeMechanicPin) return;
-    mechanicSubmissionList.innerHTML = "";
-    mechanicSubmissionEmpty.classList.add("hidden");
-    mechanicInboxLocation.textContent = `Submitted sheets for ${currentFleetLocation}`;
-
-    try{
-      const rows = await getMechanicSubmissions(selectedMechanic.id,activeMechanicPin);
-      const items = rows.map(row=>({
-        id:row.id,
-        type:row.form_type,
-        location:row.location,
-        submittedAt:row.submitted_at,
-        details:Array.isArray(row.details) ? row.details : [],
-        reviewStatus:row.review_status || "Pending",
-        reviewedByName:row.reviewed_by_name || "",
-        reviewedAt:row.reviewed_at || null
-      }));
-
-      mechanicSubmissionEmpty.classList.toggle("hidden", items.length > 0);
-
-      items.forEach(item=>{
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "submission-card";
-        const dt = new Date(item.submittedAt);
-        const stamp = isNaN(dt) ? "" : dt.toLocaleString();
-        const inspectedBy = item.details?.find(d=>/inspected by|name/i.test(d.key))?.value || "";
-        btn.innerHTML = `<span class="submission-type"></span><span class="submission-meta"></span><span class="review-status"></span>`;
-        btn.querySelector(".submission-type").textContent = item.type;
-        btn.querySelector(".submission-meta").textContent =
-          [inspectedBy, stamp].filter(Boolean).join(" • ");
-        btn.querySelector(".review-status").textContent =
-          item.reviewStatus === "Reviewed" ? "Reviewed" : "Pending Review";
-        btn.addEventListener("click",()=>showSubmissionDetail(item));
-        mechanicSubmissionList.appendChild(btn);
-      });
-    }catch(err){
-      mechanicSubmissionEmpty.classList.remove("hidden");
-      mechanicSubmissionEmpty.textContent = err.message;
-    }
+  const MECHANIC_TIME_ZONE="America/Chicago";
+  function centralParts(v){const d=new Date(v);if(isNaN(d))return null;const a=new Intl.DateTimeFormat("en-US",{timeZone:MECHANIC_TIME_ZONE,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(d),g=t=>a.find(p=>p.type===t)?.value;return{year:+g("year"),month:+g("month"),day:+g("day")};}
+  function centralKey(v){const p=centralParts(v);return p?`${p.year}-${String(p.month).padStart(2,"0")}-${String(p.day).padStart(2,"0")}`:"";}
+  function centralTime(v){const d=new Date(v);return isNaN(d)?"":new Intl.DateTimeFormat("en-US",{timeZone:MECHANIC_TIME_ZONE,hour:"numeric",minute:"2-digit"}).format(d);}
+  function keyLabel(k){const[y,m,d]=k.split("-").map(Number);return new Intl.DateTimeFormat("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric",timeZone:"UTC"}).format(new Date(Date.UTC(y,m-1,d,12)));}
+  function normalizeSubmissionRows(rows){return rows.map(r=>({id:r.id,type:r.form_type,location:r.location,submittedAt:r.submitted_at,details:Array.isArray(r.details)?r.details:[],reviewStatus:r.review_status||"Pending",reviewedByName:r.reviewed_by_name||"",reviewedAt:r.reviewed_at||null}));}
+  function renderMechanicCalendar(){
+    currentDetailView="mechanicCalendar";sheetTitle.textContent="View Checkout Sheets";mechanicCalendarView.classList.remove("hidden");mechanicDayView.classList.add("hidden");mechanicSubmissionList.classList.add("hidden");mechanicSubmissionEmpty.classList.add("hidden");mechanicCalendarGrid.innerHTML="";
+    if(!mechanicCalendarMonth){const p=centralParts(new Date());mechanicCalendarMonth=new Date(Date.UTC(p.year,p.month-1,1,12));}
+    const y=mechanicCalendarMonth.getUTCFullYear(),m=mechanicCalendarMonth.getUTCMonth();
+    calendarMonthTitle.textContent=new Intl.DateTimeFormat("en-US",{month:"long",year:"numeric",timeZone:"UTC"}).format(mechanicCalendarMonth);
+    const counts={};mechanicSubmissionItems.forEach(x=>{const k=centralKey(x.submittedAt);if(k)counts[k]=(counts[k]||0)+1;});
+    const first=new Date(Date.UTC(y,m,1,12)).getUTCDay(),days=new Date(Date.UTC(y,m+1,0,12)).getUTCDate();
+    for(let i=0;i<first;i++){const q=document.createElement("div");q.className="calendar-day calendar-blank";mechanicCalendarGrid.appendChild(q);}
+    for(let d=1;d<=days;d++){const k=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`,c=counts[k]||0,b=document.createElement("button");b.type="button";b.className="calendar-day"+(c?" has-submissions":"");b.innerHTML=`<strong>${d}</strong><span>${c?`${c} ${c===1?"sheet":"sheets"}`:""}</span>`;b.disabled=!c;if(c)b.onclick=()=>showMechanicDay(k);mechanicCalendarGrid.appendChild(b);}
   }
+  function showMechanicDay(k){
+    selectedMechanicDateKey=k;currentDetailView="mechanicDay";sheetTitle.textContent="Checkout Sheets";mechanicCalendarView.classList.add("hidden");mechanicDayView.classList.remove("hidden");mechanicSubmissionList.classList.remove("hidden");mechanicSubmissionList.innerHTML="";mechanicDayTitle.textContent=keyLabel(k);
+    const items=mechanicSubmissionItems.filter(x=>centralKey(x.submittedAt)===k).sort((a,b)=>new Date(a.submittedAt)-new Date(b.submittedAt));mechanicDaySummary.textContent=`${items.length} checkout ${items.length===1?"sheet":"sheets"} • ${currentFleetLocation}`;
+    const groups={};items.forEach(x=>(groups[x.type]??=[]).push(x));Object.keys(groups).sort().forEach(t=>{const h=document.createElement("div");h.className="submission-group-heading";h.textContent=`${t} — ${groups[t].length}`;mechanicSubmissionList.appendChild(h);groups[t].forEach(item=>{const b=document.createElement("button");b.type="button";b.className="submission-card";const op=item.details.find(d=>/inspected by|^name$/i.test(String(d.key||"")))?.value||"",unit=item.details.find(d=>/truck|tractor|machine|equipment|attenuator|message board/i.test(String(d.key||"")))?.value||"";b.innerHTML='<span class="submission-type"></span><span class="submission-meta"></span><span class="review-status"></span>';b.querySelector(".submission-type").textContent=[item.type,unit].filter(Boolean).join(" • ");b.querySelector(".submission-meta").textContent=[op,centralTime(item.submittedAt)].filter(Boolean).join(" • ");b.querySelector(".review-status").textContent=item.reviewStatus==="Reviewed"?"Reviewed":"Pending Review";b.onclick=()=>showSubmissionDetail(item);mechanicSubmissionList.appendChild(b);});});window.scrollTo({top:0,behavior:"auto"});
+  }
+  async function renderSubmissionInbox(){if(!currentFleetLocation||!selectedMechanic||!activeMechanicPin)return;mechanicInboxLocation.textContent=`Submitted sheets for ${currentFleetLocation}`;try{mechanicSubmissionItems=normalizeSubmissionRows(await getMechanicSubmissions(selectedMechanic.id,activeMechanicPin));const latest=mechanicSubmissionItems.map(x=>centralParts(x.submittedAt)).filter(Boolean).sort((a,b)=>(b.year-a.year)||(b.month-a.month)||(b.day-a.day))[0],p=latest||centralParts(new Date());mechanicCalendarMonth=new Date(Date.UTC(p.year,p.month-1,1,12));renderMechanicCalendar();}catch(e){mechanicCalendarView.classList.add("hidden");mechanicSubmissionEmpty.classList.remove("hidden");mechanicSubmissionEmpty.textContent=e.message;}}
 
   function showSubmissionDetail(item){
     currentDetailView = "submissionDetail";
@@ -1516,7 +1499,11 @@
 
   backBtn.addEventListener("click",()=>{
     if(currentDetailView === "submissionDetail"){
-      showMechanicPersonalScreen();
+      if(selectedMechanicDateKey) showMechanicDay(selectedMechanicDateKey); else renderMechanicCalendar();
+    } else if(currentDetailView === "mechanicDay"){
+      renderMechanicCalendar();
+    } else if(currentDetailView === "mechanicCalendar"){
+      mechanicCalendarView.classList.add("hidden");mechanicDayView.classList.add("hidden");mechanicSubmissionList.classList.add("hidden");mechanicInboxLocation.classList.add("hidden");showMechanicPersonalScreen();
     } else if(currentDetailView === "districtManagerLock" || currentDetailView === "districtManagerPersonal"){
       showDistrictManagerRoster();
     } else if(currentDetailView === "adminMasterUsers" || currentDetailView === "adminUserProfile" || currentDetailView === "adminMechanics" || currentDetailView === "adminManagers" || currentDetailView === "adminReset"){
@@ -1985,12 +1972,17 @@
     });
   });
 
+  calendarPrevBtn.onclick=()=>{if(mechanicCalendarMonth){mechanicCalendarMonth=new Date(Date.UTC(mechanicCalendarMonth.getUTCFullYear(),mechanicCalendarMonth.getUTCMonth()-1,1,12));renderMechanicCalendar();}};
+  calendarNextBtn.onclick=()=>{if(mechanicCalendarMonth){mechanicCalendarMonth=new Date(Date.UTC(mechanicCalendarMonth.getUTCFullYear(),mechanicCalendarMonth.getUTCMonth()+1,1,12));renderMechanicCalendar();}};
+
   mechanicViewSheetsBtn.onclick=()=>{
     mechanicLandingContent.classList.add("hidden");
     mechanicInboxLocation.classList.remove("hidden");
     mechanicSubmissionEmpty.classList.remove("hidden");
     mechanicSubmissionList.classList.remove("hidden");
     sheetTitle.textContent="View Checkout Sheets";
+    currentDetailView="mechanicCalendar";
+    mechanicDayView.classList.add("hidden");mechanicCalendarView.classList.remove("hidden");mechanicSubmissionList.classList.add("hidden");
     renderSubmissionInbox();
     window.scrollTo({top:0,left:0,behavior:"auto"});
   };
