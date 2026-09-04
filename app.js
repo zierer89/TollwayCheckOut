@@ -606,20 +606,52 @@
     return details;
   }
 
+  let storageClient=null;
+
+  function getStorageClient(){
+    if(storageClient) return storageClient;
+    const cfg=backendConfig();
+    if(!window.supabase?.createClient) throw new Error("Supabase Storage library did not load.");
+    storageClient=window.supabase.createClient(cfg.url,cfg.key,{
+      auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+    });
+    return storageClient;
+  }
+
   async function uploadSubmissionPhotos(submissionId,form){
     const input=form.querySelector('input[type="file"][multiple]');
     if(!input?.files?.length) return [];
-    const cfg=backendConfig(),uploaded=[];
+
+    const client=getStorageClient();
+    const uploaded=[];
+
     for(const file of [...input.files]){
       const safeName=(file.name||"photo.jpg").replace(/[^a-zA-Z0-9._-]/g,"_");
-      const objectPath=`${submissionId}/${crypto.randomUUID()}-${safeName}`;
-      const res=await fetch(`${cfg.url}/storage/v1/object/checkout-photos/${encodeURI(objectPath)}`,{
-        method:"POST",
-        headers:{"apikey":cfg.key,"Authorization":`Bearer ${cfg.key}`,"x-upsert":"false","Content-Type":file.type||"application/octet-stream"},
-        body:file
-      });
-      if(!res.ok) throw new Error(`Photo upload failed (${res.status}). ${await res.text()}`);
-      await backendRpc("attach_checkout_photo",{p_submission_id:submissionId,p_object_path:objectPath,p_file_name:file.name||safeName,p_mime_type:file.type||"application/octet-stream"});
+      const randomPart=(crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+      const objectPath=`${submissionId}/${randomPart}-${safeName}`;
+
+      const {error}=await client.storage
+        .from("checkout-photos")
+        .upload(objectPath,file,{
+          cacheControl:"3600",
+          upsert:false,
+          contentType:file.type||undefined
+        });
+
+      if(error) throw new Error(`Photo upload failed. ${error.message}`);
+
+      try{
+        await backendRpc("attach_checkout_photo",{
+          p_submission_id:submissionId,
+          p_object_path:objectPath,
+          p_file_name:file.name||safeName,
+          p_mime_type:file.type||"application/octet-stream"
+        });
+      }catch(e){
+        try{ await client.storage.from("checkout-photos").remove([objectPath]); }catch(_){}
+        throw e;
+      }
+
       uploaded.push(objectPath);
     }
     return uploaded;
@@ -632,22 +664,39 @@
   }
 
   async function fetchPrivatePhoto(objectPath){
-    const cfg=backendConfig();
-    const res=await fetch(`${cfg.url}/storage/v1/object/checkout-photos/${encodeURI(objectPath)}`,{headers:{"apikey":cfg.key,"Authorization":`Bearer ${cfg.key}`}});
-    if(!res.ok) throw new Error(`Photo could not be loaded (${res.status}).`);
-    return res.blob();
+    const client=getStorageClient();
+    const {data,error}=await client.storage.from("checkout-photos").download(objectPath);
+    if(error) throw new Error(`Photo could not be loaded. ${error.message}`);
+    return data;
   }
 
   async function blobToDataUrl(blob){
-    return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(blob);});
+    return new Promise((resolve,reject)=>{
+      const r=new FileReader();
+      r.onload=()=>resolve(r.result);
+      r.onerror=reject;
+      r.readAsDataURL(blob);
+    });
   }
 
   async function routeSubmissionToLocation(form){
-    const location = readFormLocation(form);
+    const location=readFormLocation(form);
     if(!location) throw new Error("Select a location before submitting.");
-    const submissionId=await backendRpc("submit_checkout_sheet",{p_location:location,p_form_type:titleFromForm(form),p_details:formSnapshot(form)});
-    await uploadSubmissionPhotos(submissionId,form);
-    return submissionId;
+
+    const submissionId=await backendRpc("submit_checkout_sheet",{
+      p_location:location,
+      p_form_type:titleFromForm(form),
+      p_details:formSnapshot(form)
+    });
+
+    let photoError=null;
+    try{
+      await uploadSubmissionPhotos(submissionId,form);
+    }catch(e){
+      photoError=e;
+    }
+
+    return {submissionId,photoError};
   }
 
   function finishSuccessfulSubmission(form,messageEl){
@@ -899,6 +948,10 @@
 
     currentDetailView="mechanicCalendar";
     sheetTitle.textContent="View Checkout Sheets";
+    mechanicSubmissionDetail.classList.add("hidden");
+    mechanicPersonalScreen.classList.remove("hidden");
+    mechanicLandingContent.classList.add("hidden");
+    mechanicInboxLocation.classList.remove("hidden");
     mechanicCalendarView.classList.remove("hidden");
     mechanicDayView.classList.add("hidden");
     mechanicSubmissionList.classList.add("hidden");
@@ -965,7 +1018,18 @@
   }
 
   function showMechanicDay(k){
-    selectedMechanicDateKey=k;currentDetailView="mechanicDay";sheetTitle.textContent="Checkout Sheets";mechanicCalendarView.classList.add("hidden");mechanicDayView.classList.remove("hidden");mechanicSubmissionList.classList.remove("hidden");mechanicSubmissionList.innerHTML="";mechanicDayTitle.textContent=keyLabel(k);
+    selectedMechanicDateKey=k;
+    currentDetailView="mechanicDay";
+    sheetTitle.textContent="Checkout Sheets";
+    mechanicSubmissionDetail.classList.add("hidden");
+    mechanicPersonalScreen.classList.remove("hidden");
+    mechanicLandingContent.classList.add("hidden");
+    mechanicInboxLocation.classList.remove("hidden");
+    mechanicCalendarView.classList.add("hidden");
+    mechanicDayView.classList.remove("hidden");
+    mechanicSubmissionList.classList.remove("hidden");
+    mechanicSubmissionList.innerHTML="";
+    mechanicDayTitle.textContent=keyLabel(k);
     const items=mechanicSubmissionItems.filter(x=>centralKey(x.submittedAt)===k).sort((a,b)=>{
       const ap=a.reviewStatus==="Reviewed"?1:0,bp=b.reviewStatus==="Reviewed"?1:0;
       return ap-bp || new Date(a.submittedAt)-new Date(b.submittedAt);
@@ -1450,11 +1514,15 @@
     }
     if(!truckForm.reportValidity()) return;
 
+    let submitResult;
     try{
-      await routeSubmissionToLocation(truckForm);
+      submitResult=await routeSubmissionToLocation(truckForm);
     }catch(err){
       alert(`Checkout could not be submitted online. ${err.message}`);
       return;
+    }
+    if(submitResult?.photoError){
+      alert(`Checkout sheet was submitted, but the photo did not upload. ${submitResult.photoError.message}`);
     }
     finishSuccessfulSubmission(truckForm,submitMessage);
   });
@@ -1478,11 +1546,15 @@
     }
     if(!tractorForm.reportValidity()) return;
 
+    let submitResult;
     try{
-      await routeSubmissionToLocation(tractorForm);
+      submitResult=await routeSubmissionToLocation(tractorForm);
     }catch(err){
       alert(`Checkout could not be submitted online. ${err.message}`);
       return;
+    }
+    if(submitResult?.photoError){
+      alert(`Checkout sheet was submitted, but the photo did not upload. ${submitResult.photoError.message}`);
     }
     finishSuccessfulSubmission(tractorForm,tractorSubmitMessage);
   });
@@ -1503,11 +1575,15 @@
       return;
     }
     if(!helpForm.reportValidity()) return;
+    let submitResult;
     try{
-      await routeSubmissionToLocation(helpForm);
+      submitResult=await routeSubmissionToLocation(helpForm);
     }catch(err){
       alert(`Checkout could not be submitted online. ${err.message}`);
       return;
+    }
+    if(submitResult?.photoError){
+      alert(`Checkout sheet was submitted, but the photo did not upload. ${submitResult.photoError.message}`);
     }
     finishSuccessfulSubmission(helpForm,helpSubmitMessage);
   });
@@ -1530,11 +1606,15 @@
       return;
     }
     if(!messageForm.reportValidity()) return;
+    let submitResult;
     try{
-      await routeSubmissionToLocation(messageForm);
+      submitResult=await routeSubmissionToLocation(messageForm);
     }catch(err){
       alert(`Checkout could not be submitted online. ${err.message}`);
       return;
+    }
+    if(submitResult?.photoError){
+      alert(`Checkout sheet was submitted, but the photo did not upload. ${submitResult.photoError.message}`);
     }
     finishSuccessfulSubmission(messageForm,messageSubmitMessage);
   });
@@ -1557,11 +1637,15 @@
       return;
     }
     if(!laneForm.reportValidity()) return;
+    let submitResult;
     try{
-      await routeSubmissionToLocation(laneForm);
+      submitResult=await routeSubmissionToLocation(laneForm);
     }catch(err){
       alert(`Checkout could not be submitted online. ${err.message}`);
       return;
+    }
+    if(submitResult?.photoError){
+      alert(`Checkout sheet was submitted, but the photo did not upload. ${submitResult.photoError.message}`);
     }
     finishSuccessfulSubmission(laneForm,laneSubmitMessage);
   });
@@ -1582,11 +1666,15 @@
       missingDefectNotes[0].querySelector(".defect-note").focus(); return;
     }
     if(!sweeperForm.reportValidity()) return;
+    let submitResult;
     try{
-      await routeSubmissionToLocation(sweeperForm);
+      submitResult=await routeSubmissionToLocation(sweeperForm);
     }catch(err){
       alert(`Checkout could not be submitted online. ${err.message}`);
       return;
+    }
+    if(submitResult?.photoError){
+      alert(`Checkout sheet was submitted, but the photo did not upload. ${submitResult.photoError.message}`);
     }
     finishSuccessfulSubmission(sweeperForm,sweeperSubmitMessage);
   });
@@ -1606,11 +1694,15 @@
       missingDefectNotes[0].querySelector(".defect-note").focus(); return;
     }
     if(!equipmentForm.reportValidity()) return;
+    let submitResult;
     try{
-      await routeSubmissionToLocation(equipmentForm);
+      submitResult=await routeSubmissionToLocation(equipmentForm);
     }catch(err){
       alert(`Checkout could not be submitted online. ${err.message}`);
       return;
+    }
+    if(submitResult?.photoError){
+      alert(`Checkout sheet was submitted, but the photo did not upload. ${submitResult.photoError.message}`);
     }
     finishSuccessfulSubmission(equipmentForm,equipmentSubmitMessage);
   });
@@ -1634,11 +1726,15 @@
     }
     if(!tmaForm.reportValidity()) return;
 
+    let submitResult;
     try{
-      await routeSubmissionToLocation(tmaForm);
+      submitResult=await routeSubmissionToLocation(tmaForm);
     }catch(err){
       alert(`Checkout could not be submitted online. ${err.message}`);
       return;
+    }
+    if(submitResult?.photoError){
+      alert(`Checkout sheet was submitted, but the photo did not upload. ${submitResult.photoError.message}`);
     }
     finishSuccessfulSubmission(tmaForm,tmaSubmitMessage);
   });
@@ -1669,11 +1765,18 @@
       currentDetailView="districtManagerPersonal";
       sheetTitle.textContent=selectedDistrictManager.name;
     } else if(currentDetailView === "submissionDetail"){
+      mechanicSubmissionDetail.classList.add("hidden");
+      mechanicPersonalScreen.classList.remove("hidden");
       if(selectedMechanicDateKey) showMechanicDay(selectedMechanicDateKey); else renderMechanicCalendar();
     } else if(currentDetailView === "mechanicDay"){
       renderMechanicCalendar();
     } else if(currentDetailView === "mechanicCalendar"){
-      mechanicCalendarView.classList.add("hidden");mechanicDayView.classList.add("hidden");mechanicSubmissionList.classList.add("hidden");mechanicInboxLocation.classList.add("hidden");showMechanicPersonalScreen();
+      selectedMechanicDateKey=null;
+      mechanicCalendarView.classList.add("hidden");
+      mechanicDayView.classList.add("hidden");
+      mechanicSubmissionList.classList.add("hidden");
+      mechanicInboxLocation.classList.add("hidden");
+      showMechanicPersonalScreen();
     } else if(currentDetailView === "districtManagerLock" || currentDetailView === "districtManagerPersonal"){
       showDistrictManagerRoster();
     } else if(currentDetailView === "adminMasterUsers" || currentDetailView === "adminUserProfile" || currentDetailView === "adminMechanics" || currentDetailView === "adminManagers" || currentDetailView === "adminReset"){

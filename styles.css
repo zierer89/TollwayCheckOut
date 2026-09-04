@@ -1079,3 +1079,9 @@ textarea{min-height:120px;resize:vertical}
 .submission-photo-grid img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;border:1px solid #d9e0dc;cursor:pointer}
 .photo-empty{color:#6b7280;font-weight:700}
 @media(max-width:520px){.submission-photo-grid{grid-template-columns:1fr}}
+
+/* v53.1: prevent accidental repeat taps during submit */
+.submit-btn:disabled{
+  opacity:.65;
+  cursor:wait;
+}
